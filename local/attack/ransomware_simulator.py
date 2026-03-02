@@ -15,7 +15,14 @@ import os
 import sys
 import time
 
+try:
+    import requests
+    _requests_available = True
+except ImportError:
+    _requests_available = False
+
 DEMO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "demo_files")
+RAILWAY_URL = os.environ.get("RAILWAY_URL", "").rstrip("/")
 XOR_KEY = 0x5A  # Simple single-byte XOR key used for the simulation
 ENCRYPTED_EXT = ".encrypted"
 
@@ -39,6 +46,20 @@ def print_banner():
 def xor_bytes(data: bytes) -> bytes:
     """Apply single-byte XOR transformation (reversible)."""
     return bytes(b ^ XOR_KEY for b in data)
+
+
+def notify_dashboard(event: str, state: str, message: str) -> None:
+    """Send an event notification to the Railway dashboard API (best-effort)."""
+    if not RAILWAY_URL or not _requests_available:
+        return
+    try:
+        requests.post(
+            f"{RAILWAY_URL}/api/attack",
+            json={"event": event, "state": state, "message": message},
+            timeout=5,
+        )
+    except requests.exceptions.RequestException:
+        pass
 
 
 def ensure_demo_files():
@@ -70,6 +91,7 @@ def simulate_attack():
 
     print(f"[SIMULATION] 🔴 RANSOMWARE ATTACK STARTING on {len(targets)} file(s)...")
     print("")
+    notify_dashboard("attack_started", "attack", f"🔴 Ransomware attack initiated - targeting {len(targets)} files")
 
     start_time = time.time()
     total_bytes = 0
@@ -85,6 +107,7 @@ def simulate_attack():
         os.remove(src)
         total_bytes += len(data)
         print(f"[SIMULATION] Encrypting: {filename} -> {filename}{ENCRYPTED_EXT}  ({len(data)} bytes)")
+        notify_dashboard("file_encrypted", "attack", f"Encrypting: {filename} ({len(data)} bytes)")
         time.sleep(0.3)
 
     elapsed = time.time() - start_time
@@ -99,6 +122,7 @@ def simulate_attack():
     print("[SIMULATION] In a real attack, files would now be inaccessible.")
     print("[SIMULATION] Run with --decrypt to simulate recovery.")
     print("")
+    notify_dashboard("attack_complete", "attack", f"☠️ Attack complete - {len(targets)} files encrypted, {total_bytes} bytes affected")
 
 
 def simulate_recovery():
@@ -114,6 +138,7 @@ def simulate_recovery():
 
     print(f"[SIMULATION] 🟢 RECOVERY STARTING - restoring {len(targets)} file(s)...")
     print("")
+    notify_dashboard("recovery_started", "recovery", f"🟢 Recovery initiated - restoring {len(targets)} files")
 
     start_time = time.time()
     total_bytes = 0
@@ -130,6 +155,7 @@ def simulate_recovery():
         os.remove(src)
         total_bytes += len(data)
         print(f"[SIMULATION] Recovering: {filename} -> {original_name}  ({len(data)} bytes)")
+        notify_dashboard("file_decrypted", "recovery", f"Recovering: {filename} ({len(data)} bytes)")
         time.sleep(0.3)
 
     elapsed = time.time() - start_time
@@ -144,6 +170,7 @@ def simulate_recovery():
     print("[SIMULATION] All files have been restored successfully.")
     print("[SIMULATION] This demonstrates the importance of backups and recovery plans.")
     print("")
+    notify_dashboard("recovery_complete", "normal", f"✅ Recovery complete - {len(targets)} files restored")
 
 
 def main():
