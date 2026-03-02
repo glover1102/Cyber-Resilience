@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡️ Cyber Resilience Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    header h1 { font-size: 1.6rem; color: #e6edf3; }
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-live  { background: #1a7f37; color: #56d364; }
+    .badge-demo  { background: #1c3a5a; color: #58a6ff; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8b949e;
+      margin-bottom: 0.75rem;
+    }
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #e6edf3;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .metric-label { font-size: 0.8rem; color: #8b949e; }
+
+    .bar-track {
+      background: #21262d;
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+      margin-top: 0.6rem;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+    .bar-ok      { background: #1a7f37; }
+    .bar-warn    { background: #9e6a03; }
+    .bar-danger  { background: #b62324; }
+
+    /* Attack status card */
+    .status-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .status-normal   { border-color: #238636; }
+    .status-attack   { border-color: #b62324; }
+    .status-recovery { border-color: #9e6a03; }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e6edf3;
+      margin-bottom: 0.4rem;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-normal   { background: #3fb950; box-shadow: 0 0 6px #3fb950; }
+    .dot-attack   { background: #f85149; box-shadow: 0 0 6px #f85149; animation: pulse 1s infinite; }
+    .dot-recovery { background: #e3b341; box-shadow: 0 0 6px #e3b341; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* Event timeline */
+    .events-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .events-list { list-style: none; }
+    .events-list li {
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 0.85rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+    .events-list li:last-child { border-bottom: none; }
+    .event-time { color: #8b949e; white-space: nowrap; }
+    .event-msg  { color: #c9d1d9; }
+
+    .no-data { color: #8b949e; font-size: 0.85rem; font-style: italic; }
+
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #484f58;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛡️ Cyber Resilience Dashboard</h1>
+    <span class="badge badge-live" id="liveIndicator">● Live</span>
+    <span class="badge badge-demo">Demo</span>
+  </header>
+
+  <!-- Attack / Recovery Status -->
+  <div class="status-card" id="statusCard">
+    <div class="card-title">System Status</div>
+    <div class="status-indicator">
+      <div class="dot dot-normal" id="statusDot"></div>
+      <span id="statusText">Loading…</span>
+    </div>
+    <div class="no-data" id="statusTime"></div>
+  </div>
+
+  <!-- Metrics Cards -->
+  <div class="grid" id="metricsGrid">
+    <!-- CPU -->
+    <div class="card">
+      <div class="card-title">CPU Usage</div>
+      <div class="metric-value" id="cpuValue">—</div>
+      <div class="metric-label">percent utilization</div>
+      <div class="bar-track"><div class="bar-fill bar-ok" id="cpuBar" style="width:0%"></div></div>
+    </div>
+    <!-- Memory -->
+    <div class="card">
+      <div class="card-title">Memory Usage</div>
+      <div class="metric-value" id="memValue">—</div>
+      <div class="metric-label" id="memDetail">used / total</div>
+      <div class="bar-track"><div class="bar-fill bar-ok" id="memBar" style="width:0%"></div></div>
+    </div>
+    <!-- Disk -->
+    <div class="card">
+      <div class="card-title">Disk Usage</div>
+      <div class="metric-value" id="diskValue">—</div>
+      <div class="metric-label" id="diskDetail">used / total</div>
+      <div class="bar-track"><div class="bar-fill bar-ok" id="diskBar" style="width:0%"></div></div>
+    </div>
+    <!-- Network -->
+    <div class="card">
+      <div class="card-title">Network I/O</div>
+      <div class="metric-value" id="netSent">—</div>
+      <div class="metric-label">bytes sent</div>
+      <div style="margin-top:0.6rem">
+        <div class="metric-value" id="netRecv">—</div>
+        <div class="metric-label">bytes received</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Timeline -->
+  <div class="events-card">
+    <div class="card-title">Event Timeline</div>
+    <ul class="events-list" id="eventsList">
+      <li><span class="no-data">No events yet.</span></li>
+    </ul>
+  </div>
+
+  <footer>
+    Last updated: <span id="lastUpdated">—</span> &nbsp;·&nbsp; Auto-refreshes every 4 seconds
+  </footer>
+
+  <script>
+    function fmt(bytes) {
+      if (bytes === undefined || bytes === null) return '—';
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0;
+      while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+      return bytes.toFixed(1) + ' ' + units[i];
+    }
+
+    function barClass(pct) {
+      if (pct < 70) return 'bar-ok';
+      if (pct < 90) return 'bar-warn';
+      return 'bar-danger';
+    }
+
+    function setBar(el, pct) {
+      el.style.width = pct + '%';
+      el.className = 'bar-fill ' + barClass(pct);
+    }
+
+    function tsToTime(ts) {
+      if (!ts) return '—';
+      return new Date(ts * 1000).toLocaleTimeString();
+    }
+
+    async function fetchMetrics() {
+      try {
+        const r = await fetch('/api/metrics');
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!d || !d.cpu_percent) return;
+
+        document.getElementById('cpuValue').textContent = d.cpu_percent.toFixed(1) + '%';
+        setBar(document.getElementById('cpuBar'), d.cpu_percent);
+
+        if (d.memory) {
+          const mp = d.memory.percent;
+          document.getElementById('memValue').textContent = mp.toFixed(1) + '%';
+          document.getElementById('memDetail').textContent = fmt(d.memory.used) + ' / ' + fmt(d.memory.total);
+          setBar(document.getElementById('memBar'), mp);
+        }
+
+        if (d.disk) {
+          const dp = d.disk.percent;
+          document.getElementById('diskValue').textContent = dp.toFixed(1) + '%';
+          document.getElementById('diskDetail').textContent = fmt(d.disk.used) + ' / ' + fmt(d.disk.total);
+          setBar(document.getElementById('diskBar'), dp);
+        }
+
+        if (d.network) {
+          document.getElementById('netSent').textContent = fmt(d.network.bytes_sent);
+          document.getElementById('netRecv').textContent = fmt(d.network.bytes_recv);
+        }
+
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+      } catch (e) { /* silently ignore network errors */ }
+    }
+
+    async function fetchStatus() {
+      try {
+        const r = await fetch('/api/status');
+        if (!r.ok) return;
+        const d = await r.json();
+        const s = d.status || {};
+        const state = s.state || 'normal';
+        const card  = document.getElementById('statusCard');
+        const dot   = document.getElementById('statusDot');
+        const text  = document.getElementById('statusText');
+        const time  = document.getElementById('statusTime');
+
+        card.className = 'status-card status-' + state;
+        dot.className  = 'dot dot-' + state;
+        text.textContent = s.message || 'System operating normally';
+        time.textContent = s.timestamp ? 'Last event: ' + tsToTime(s.timestamp) : '';
+
+        const events = d.events || [];
+        const list = document.getElementById('eventsList');
+        if (events.length === 0) {
+          list.innerHTML = '<li><span class="no-data">No events yet.</span></li>';
+        } else {
+          list.innerHTML = events.slice().reverse().map(ev =>
+            `<li>
+              <span class="event-time">${tsToTime(ev.timestamp)}</span>
+              <span class="event-msg">${ev.message || ev.event}</span>
+            </li>`
+          ).join('');
+        }
+      } catch (e) { /* silently ignore */ }
+    }
+
+    function refresh() { fetchMetrics(); fetchStatus(); }
+    refresh();
+    setInterval(refresh, 4000);
+  </script>
+</body>
+</html>
