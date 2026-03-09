@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Resilience Status Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Alert Banner (hidden by default) -->
+    <div id="alert-banner" class="alert-banner hidden">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">
+            <strong>RANSOMWARE DETECTED</strong>
+            <span id="alert-message">Malicious activity detected on the network. Incident response initiated.</span>
+        </div>
+        <div class="alert-timestamp" id="alert-timestamp"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <div class="logo-text">
+                    <h1>Cyber Resilience</h1>
+                    <p>Live Demonstration Platform</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <div class="connection-status" id="connection-status">
+                    <span class="status-dot" id="connection-dot"></span>
+                    <span id="connection-text">Connecting...</span>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="last-updated">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Overall System Status -->
+        <section class="system-overview">
+            <div class="overview-card">
+                <div class="overview-metric">
+                    <span class="metric-label">Overall Status</span>
+                    <span class="metric-value" id="overall-status">OPERATIONAL</span>
+                </div>
+                <div class="overview-metric">
+                    <span class="metric-label">Systems Online</span>
+                    <span class="metric-value" id="systems-online">6/6</span>
+                </div>
+                <div class="overview-metric">
+                    <span class="metric-label">Active Alerts</span>
+                    <span class="metric-value alert-count" id="active-alerts">0</span>
+                </div>
+                <div class="overview-metric">
+                    <span class="metric-label">Uptime</span>
+                    <span class="metric-value" id="uptime">99.99%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Cards Grid -->
+        <section class="status-grid">
+            <h2 class="section-title">System Status</h2>
+            <div class="cards-container">
+
+                <!-- Primary DC -->
+                <div class="status-card" id="card-primary-dc">
+                    <div class="card-header">
+                        <div class="card-icon">🏢</div>
+                        <div class="card-title">Primary DC</div>
+                        <div class="card-status-badge online" id="badge-primary-dc">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-primary-dc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-primary-dc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-primary-dc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-primary-dc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">NET</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-primary-dc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-primary-dc">0 MB/s</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Primary Domain Controller</span>
+                        <span class="card-pulse" id="pulse-primary-dc">●</span>
+                    </div>
+                </div>
+
+                <!-- Secondary DC -->
+                <div class="status-card" id="card-secondary-dc">
+                    <div class="card-header">
+                        <div class="card-icon">🏗️</div>
+                        <div class="card-title">Secondary DC</div>
+                        <div class="card-status-badge online" id="badge-secondary-dc">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-secondary-dc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-secondary-dc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-secondary-dc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-secondary-dc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">NET</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-secondary-dc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-secondary-dc">0 MB/s</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Secondary Domain Controller</span>
+                        <span class="card-pulse" id="pulse-secondary-dc">●</span>
+                    </div>
+                </div>
+
+                <!-- SOC -->
+                <div class="status-card" id="card-soc">
+                    <div class="card-header">
+                        <div class="card-icon">🔍</div>
+                        <div class="card-title">SOC</div>
+                        <div class="card-status-badge online" id="badge-soc">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-soc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-soc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-soc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-soc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Alerts</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-soc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-soc">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Security Operations Center</span>
+                        <span class="card-pulse" id="pulse-soc">●</span>
+                    </div>
+                </div>
+
+                <!-- NOC -->
+                <div class="status-card" id="card-noc">
+                    <div class="card-header">
+                        <div class="card-icon">📡</div>
+                        <div class="card-title">NOC</div>
+                        <div class="card-status-badge online" id="badge-noc">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-noc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-noc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-noc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-noc">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">NET</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-noc" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-noc">0 MB/s</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Network Operations Center</span>
+                        <span class="card-pulse" id="pulse-noc">●</span>
+                    </div>
+                </div>
+
+                <!-- Backup -->
+                <div class="status-card" id="card-backup">
+                    <div class="card-header">
+                        <div class="card-icon">💾</div>
+                        <div class="card-title">Backup</div>
+                        <div class="card-status-badge online" id="badge-backup">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-backup" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-backup">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-backup" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-backup">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Storage</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-backup" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-backup">0%</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Backup &amp; Recovery Server</span>
+                        <span class="card-pulse" id="pulse-backup">●</span>
+                    </div>
+                </div>
+
+                <!-- Application -->
+                <div class="status-card" id="card-application">
+                    <div class="card-header">
+                        <div class="card-icon">⚙️</div>
+                        <div class="card-title">Application</div>
+                        <div class="card-status-badge online" id="badge-application">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-application" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-application">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-application" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-application">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Req/s</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-application" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-application">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Application Server</span>
+                        <span class="card-pulse" id="pulse-application">●</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Event Timeline -->
+        <section class="timeline-section">
+            <h2 class="section-title">Event Timeline</h2>
+            <div class="timeline" id="timeline">
+                <div class="timeline-item info">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-time" id="start-time">--:--:--</span>
+                        <span class="timeline-desc">Dashboard initialised — awaiting metrics</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QR Code Section -->
+        <section class="qr-section">
+            <div class="qr-card">
+                <div class="qr-icon">📱</div>
+                <div class="qr-content">
+                    <h3>Follow Along Live</h3>
+                    <p>Scan the QR code or visit the URL below to view this dashboard on your device</p>
+                    <div class="qr-placeholder">
+                        <div class="qr-box">QR</div>
+                    </div>
+                    <div class="qr-url" id="qr-url">Loading URL...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>🛡️ Cyber Resilience Demo Platform &nbsp;|&nbsp; For educational purposes only</p>
+        <p>MITRE ATT&amp;CK® Framework Reference &nbsp;|&nbsp; 3-2-1-1-0 Backup Strategy</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
