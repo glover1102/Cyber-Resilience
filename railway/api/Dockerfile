@@ -5,16 +5,18 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy dependency manifests first for better layer caching
-COPY package.json ./
+# NOTE: Build context must be the railway/ directory:
+#   docker build -f railway/api/Dockerfile railway/
+COPY api/package.json ./
 
 # Install production dependencies only
 RUN npm install --omit=dev
 
 # Copy application source
-COPY server.js ./
+COPY api/server.js ./
 
 # Copy the status-page static assets so the server can serve them
-COPY ../status-page ./status-page
+COPY status-page ./status-page
 
 # Expose the API port
 EXPOSE 3000

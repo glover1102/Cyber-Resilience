@@ -114,7 +114,7 @@ if command -v free &>/dev/null; then
     if [ "$TOTAL_RAM_KB" -ge 16777216 ]; then
         pass "RAM: ${TOTAL_RAM_GB} GB"
     elif [ "$TOTAL_RAM_KB" -ge 8388608 ]; then
-        warn "RAM: ${TOTAL_RAM_GB} GB (32 GB recommended for full VM lab; demo still works)"
+        warn "RAM: ${TOTAL_RAM_GB} GB (16 GB is sufficient for the simulated demo; 32 GB recommended only for a full VM lab)"
     else
         fail "RAM: ${TOTAL_RAM_GB} GB — at least 8 GB required; 32 GB recommended for full lab"
     fi
