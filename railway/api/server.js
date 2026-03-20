@@ -27,7 +27,9 @@ app.use(cors());
 app.use(express.json());
 
 // Serve the static status-page dashboard
-app.use(express.static(path.join(__dirname, '..', 'status-page')));
+const statusPagePath = path.join(__dirname, '..', 'status-page');
+console.log(`📁 Serving static files from: ${statusPagePath}`);
+app.use(express.static(statusPagePath));
 
 // ----------------------------------------------------------------
 // In-memory state
@@ -135,6 +137,8 @@ app.post('/api/metrics', (req, res) => {
  * Server-Sent Events endpoint. Clients subscribe here for real-time updates.
  */
 app.get('/api/stream', (req, res) => {
+    console.log('📡 New SSE client connected from', req.ip);
+
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -225,6 +229,19 @@ app.post('/api/simulate-attack', (req, res) => {
 });
 
 // ----------------------------------------------------------------
+// Catchall 404 handler — must be registered after all routes
+// ----------------------------------------------------------------
+app.use((req, res) => {
+    console.error(`❌ 404 Not Found: ${req.method} ${req.url}`);
+    res.status(404).json({
+        error: 'Not Found',
+        path: req.url,
+        method: req.method,
+        message: 'This endpoint does not exist. Check server logs for registered routes.',
+    });
+});
+
+// ----------------------------------------------------------------
 // Start Server
 // ----------------------------------------------------------------
 app.listen(PORT, () => {
@@ -232,6 +249,22 @@ app.listen(PORT, () => {
     console.log(`📊 Dashboard: http://localhost:${PORT}`);
     console.log(`🔗 Stream:    http://localhost:${PORT}/api/stream`);
     console.log(`❤️  Health:   http://localhost:${PORT}/health`);
+
+    // Log registered routes for debugging
+    console.log('\n📍 Registered routes:');
+    app._router.stack.forEach((middleware) => {
+        if (middleware.route) {
+            const methods = Object.keys(middleware.route.methods).join(', ').toUpperCase();
+            console.log(`   ${methods} ${middleware.route.path}`);
+        } else if (middleware.name === 'router') {
+            middleware.handle.stack.forEach((handler) => {
+                if (handler.route) {
+                    const methods = Object.keys(handler.route.methods).join(', ').toUpperCase();
+                    console.log(`   ${methods} ${handler.route.path}`);
+                }
+            });
+        }
+    });
 });
 
 module.exports = app; // allow testing
