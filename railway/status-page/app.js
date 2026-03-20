@@ -557,16 +557,16 @@ function nextPhaseDemo() {
     const nextPhase = phases[demoPhaseCursor];
     if (!nextPhase) return;
 
-    // Clear all pending timeouts and reschedule remaining ones from now
+    // Clear all pending timeouts
     demoTimeoutIds.forEach(id => clearTimeout(id));
     demoTimeoutIds = [];
 
-    // Trigger the next phase immediately
+    // Trigger the next phase immediately and compute remaining phases before advancing cursor
     triggerAttackPhase(nextPhase.phase);
+    const remaining = phases.slice(demoPhaseCursor + 1);
     demoPhaseCursor++;
 
     // Reschedule remaining phases relative to now
-    const remaining = phases.slice(demoPhaseCursor);
     remaining.forEach(({ phase }, i) => {
         const delay = (i + 1) * 5000; // 5s gaps between remaining phases
         const timeoutId = setTimeout(() => {
