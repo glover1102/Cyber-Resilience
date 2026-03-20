@@ -1,0 +1,22 @@
+{
+  "name": "cyber-resilience",
+  "version": "1.0.0",
+  "description": "Cyber Resilience Dashboard - Live demonstration platform",
+  "private": true,
+  "scripts": {
+    "start": "cd railway/api && node server.js",
+    "build": "cd railway/api && npm install",
+    "dev": "cd railway/api && node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "cybersecurity",
+    "resilience",
+    "monitoring",
+    "dashboard"
+  ],
+  "license": "MIT"
+}
