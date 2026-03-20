@@ -43,6 +43,11 @@ let systemStatus = {
     'noc': { status: 'online', cpu: 22, memory: 45, network: 8.4 },
     'backup': { status: 'online', cpu: 10, memory: 30, network: 60 },
     'application': { status: 'online', cpu: 42, memory: 60, network: 120 },
+    'firewall': { status: 'online', cpu: 15, memory: 25, network: 450 },
+    'vpn': { status: 'online', cpu: 30, memory: 35, network: 85 },
+    'database': { status: 'online', cpu: 45, memory: 70, network: 320 },
+    'email': { status: 'online', cpu: 25, memory: 40, network: 180 },
+    'edr': { status: 'online', cpu: 20, memory: 30, network: 5 },
 };
 
 let attackActive = false;
@@ -187,25 +192,41 @@ app.post('/api/simulate-attack', (req, res) => {
             attackActive = true;
             alertMessage = 'Ransomware detected on Primary DC — Incident response initiated';
 
-            // Simulate attack impact on primary DC
-            systemStatus['primary-dc'] = { ...systemStatus['primary-dc'], status: 'warning', cpu: 95, memory: 88 };
+            // Firewall detects anomaly
+            systemStatus['firewall'] = { ...systemStatus['firewall'], status: 'warning', cpu: 85, memory: 60, network: 1200 };
+            // EDR starts scanning
+            systemStatus['edr'] = { ...systemStatus['edr'], status: 'warning', cpu: 95, memory: 80, network: 15 };
+            // Primary DC compromised
+            systemStatus['primary-dc'] = { ...systemStatus['primary-dc'], status: 'warning', cpu: 95, memory: 88, network: 12.0 };
 
-            broadcastStatus({ type: 'danger', message: '⚠️  Ransomware attack started — reconnaissance phase' });
+            broadcastStatus({ type: 'danger', message: '⚠️ Ransomware detected — Firewall alerts triggered' });
             broadcast('alert', { message: alertMessage });
             break;
         }
         case 'spreading': {
-            systemStatus['primary-dc'] = { ...systemStatus['primary-dc'], status: 'offline', cpu: 100, memory: 95 };
-            systemStatus['application'] = { ...systemStatus['application'], status: 'warning', cpu: 88, memory: 82 };
+            // Lateral movement to VPN and Database
+            systemStatus['primary-dc'] = { ...systemStatus['primary-dc'], status: 'offline', cpu: 100, memory: 95, network: 0 };
+            systemStatus['vpn'] = { ...systemStatus['vpn'], status: 'warning', cpu: 88, memory: 75, network: 200 };
+            systemStatus['database'] = { ...systemStatus['database'], status: 'warning', cpu: 90, memory: 85, network: 850 };
+            systemStatus['email'] = { ...systemStatus['email'], status: 'warning', cpu: 70, memory: 65, network: 500 };
+            systemStatus['application'] = { ...systemStatus['application'], status: 'warning', cpu: 88, memory: 82, network: 50 };
 
-            broadcastStatus({ type: 'danger', message: '🔴 Ransomware spreading — encrypting files on Primary DC' });
+            broadcastStatus({ type: 'danger', message: '🔴 Ransomware spreading — VPN, Database, Email compromised' });
             break;
         }
         case 'encrypted': {
-            systemStatus['primary-dc'] = { ...systemStatus['primary-dc'], status: 'offline', cpu: 5, memory: 90 };
-            systemStatus['application'] = { ...systemStatus['application'], status: 'offline', cpu: 5, memory: 90 };
+            // Systems encrypted and offline
+            systemStatus['primary-dc'] = { ...systemStatus['primary-dc'], status: 'offline', cpu: 5, memory: 90, network: 0 };
+            systemStatus['application'] = { ...systemStatus['application'], status: 'offline', cpu: 5, memory: 90, network: 0 };
+            systemStatus['database'] = { ...systemStatus['database'], status: 'offline', cpu: 10, memory: 85, network: 0 };
+            systemStatus['email'] = { ...systemStatus['email'], status: 'offline', cpu: 5, memory: 60, network: 0 };
+            systemStatus['vpn'] = { ...systemStatus['vpn'], status: 'offline', cpu: 8, memory: 50, network: 0 };
 
-            broadcastStatus({ type: 'danger', message: '💀 Files encrypted — failover to Secondary DC initiated' });
+            // Firewall and EDR still reporting
+            systemStatus['firewall'] = { ...systemStatus['firewall'], status: 'warning', cpu: 90, memory: 70, network: 50 };
+            systemStatus['edr'] = { ...systemStatus['edr'], status: 'warning', cpu: 100, memory: 90, network: 25 };
+
+            broadcastStatus({ type: 'danger', message: '💀 Files encrypted — 5 systems offline, failover to Secondary DC' });
             break;
         }
         case 'recovery': {
@@ -216,9 +237,17 @@ app.post('/api/simulate-attack', (req, res) => {
             systemStatus['primary-dc'] = { status: 'warning', cpu: 30, memory: 45, network: 4.0 };
             systemStatus['secondary-dc'] = { status: 'online', cpu: 55, memory: 65, network: 12.0 };
             systemStatus['application'] = { status: 'online', cpu: 42, memory: 58, network: 95 };
+            systemStatus['database'] = { status: 'online', cpu: 50, memory: 72, network: 350 };
+            systemStatus['email'] = { status: 'online', cpu: 28, memory: 42, network: 200 };
+            systemStatus['vpn'] = { status: 'online', cpu: 32, memory: 38, network: 90 };
+            systemStatus['firewall'] = { status: 'online', cpu: 18, memory: 28, network: 480 };
+            systemStatus['edr'] = { status: 'online', cpu: 22, memory: 32, network: 6 };
+            systemStatus['soc'] = { status: 'online', cpu: 40, memory: 58, network: 3 };
+            systemStatus['noc'] = { status: 'online', cpu: 24, memory: 47, network: 8.8 };
+            systemStatus['backup'] = { status: 'online', cpu: 12, memory: 32, network: 65 };
 
-            broadcastStatus({ type: 'success', message: '✅ Recovery complete — systems restored from backup' });
-            broadcast('recovery', { message: 'Systems recovered successfully using 3-2-1-1-0 backup strategy' });
+            broadcastStatus({ type: 'success', message: '✅ Recovery complete — All systems restored from backup' });
+            broadcast('recovery', { message: 'Systems recovered using 3-2-1-1-0 backup strategy' });
             break;
         }
         default:

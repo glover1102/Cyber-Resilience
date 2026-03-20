@@ -694,3 +694,84 @@ body {
         font-size: 1.2rem;
     }
 }
+
+/* ================================================================
+   Demo Control Section
+   ================================================================ */
+
+.demo-control {
+    max-width: 1400px;
+    margin: 2rem auto;
+    text-align: center;
+}
+
+.demo-button {
+    background: linear-gradient(135deg, #e63946 0%, #d62828 100%);
+    color: white;
+    border: none;
+    padding: 1.2rem 3rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4);
+    transition: all 0.3s ease;
+    letter-spacing: 2px;
+}
+
+.demo-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(230, 57, 70, 0.6);
+}
+
+.demo-button:active {
+    transform: translateY(0);
+}
+
+.demo-button-stop {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+.demo-progress {
+    margin-top: 1.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.progress-bar-container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    height: 30px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #06d6a0 0%, #118ab2 100%);
+    height: 100%;
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 18px;
+}
+
+.demo-status {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.hidden {
+    display: none !important;
+}
