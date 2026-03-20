@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <!-- Alert Banner (hidden by default) -->
     <div id="alert-banner" class="alert-banner hidden">
         <div class="alert-icon">⚠️</div>
@@ -28,6 +29,8 @@
                 </div>
             </div>
             <div class="header-status">
+                <button id="reset-btn" class="reset-btn" title="Reset all systems to operational baseline">🔄 RESET</button>
+                <button id="narration-toggle-btn" class="narration-btn" title="Toggle voice narration">🎤 OFF</button>
                 <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme">🌙</button>
                 <div class="connection-status" id="connection-status">
                     <span class="status-dot" id="connection-dot"></span>
@@ -43,29 +46,43 @@
     <!-- Main Content -->
     <main class="main-content">
 
-        <!-- Overall System Status -->
-        <section class="system-overview">
-            <div class="overview-card">
-                <div class="overview-metric">
-                    <span class="metric-label">Overall Status</span>
-                    <span class="metric-value" id="overall-status">OPERATIONAL</span>
+        <!-- KPI Summary Cards -->
+        <section class="kpi-section">
+            <div class="kpi-card">
+                <div class="kpi-icon">🖥️</div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Systems Online</div>
+                    <div class="kpi-value" id="kpi-systems">11/11</div>
+                    <div class="kpi-change positive" id="kpi-systems-change">+0%</div>
                 </div>
-                <div class="overview-metric">
-                    <span class="metric-label">Systems Online</span>
-                    <span class="metric-value" id="systems-online">11/11</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">🚨</div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Active Alerts</div>
+                    <div class="kpi-value" id="kpi-alerts">0</div>
+                    <div class="kpi-change positive" id="kpi-alerts-change">+0</div>
                 </div>
-                <div class="overview-metric">
-                    <span class="metric-label">Active Alerts</span>
-                    <span class="metric-value alert-count" id="active-alerts">0</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">🌐</div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Network Traffic</div>
+                    <div class="kpi-value" id="kpi-network">2.4 GB/s</div>
+                    <div class="kpi-change positive" id="kpi-network-change">+0.2%</div>
                 </div>
-                <div class="overview-metric">
-                    <span class="metric-label">Uptime</span>
-                    <span class="metric-value" id="uptime">99.99%</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">💾</div>
+                <div class="kpi-body">
+                    <div class="kpi-label">Backup Status</div>
+                    <div class="kpi-value" id="kpi-backup">100%</div>
+                    <div class="kpi-change positive" id="kpi-backup-change">+0.4%</div>
                 </div>
             </div>
         </section>
 
-        <!-- Auto Demo Control -->
+        <!-- Demo Controls -->
         <section class="demo-control">
             <div class="demo-mode-selector">
                 <label>
@@ -90,6 +107,8 @@
                     <button id="pause-demo-btn" class="demo-control-btn">⏸️ Pause</button>
                     <button id="next-phase-btn" class="demo-control-btn">⏭️ Next</button>
                     <button id="stop-demo-btn" class="demo-control-btn">⏹️ Stop</button>
+                    <button id="narration-demo-btn" class="demo-control-btn narration-demo-btn">🎤 Narration: OFF</button>
+                    <button id="reset-demo-btn" class="demo-control-btn reset-demo-btn">🔄 Reset</button>
                 </div>
             </div>
         </section>
@@ -117,737 +136,464 @@
             </defs>
         </svg>
 
-        <!-- Status Cards Grid -->
-        <section class="status-grid">
-            <h2 class="section-title">System Status</h2>
-            <div class="cards-container">
+        <!-- Two-column layout: Critical Systems + Timeline Chart -->
+        <div class="dashboard-columns">
 
-                <!-- Primary DC -->
-                <div class="status-card" id="card-primary-dc">
-                    <div class="card-header">
-                        <div class="card-icon">🏢</div>
-                        <div class="card-title">Primary DC</div>
-                        <div class="card-status-badge online" id="badge-primary-dc">ONLINE</div>
+            <!-- Left: Critical Systems (5 systems) -->
+            <section class="critical-systems">
+                <h2 class="section-title">⚡ Critical Systems</h2>
+                <div class="cards-container critical">
+
+                    <!-- Primary DC -->
+                    <div class="status-card critical-card" id="card-primary-dc">
+                        <div class="card-header">
+                            <div class="card-icon">🏢</div>
+                            <div class="card-title">Primary DC</div>
+                            <div class="card-status-badge online" id="badge-primary-dc">ONLINE</div>
+                        </div>
+                        <div class="card-metrics gauges">
+                            <div class="metric-row circular">
+                                <span class="metric-name">CPU</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-cpu-primary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-cpu-primary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-cpu-primary-dc">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">MEM</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-mem-primary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-mem-primary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-mem-primary-dc">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">NET</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-net-primary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-net-primary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-net-primary-dc">0 MB/s</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-role">Primary Domain Controller</span>
+                            <span class="card-pulse" id="pulse-primary-dc">●</span>
+                        </div>
                     </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-primary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-primary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-primary-dc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
+
+                    <!-- Firewall -->
+                    <div class="status-card critical-card" id="card-firewall">
+                        <div class="card-header">
+                            <div class="card-icon">🔐</div>
+                            <div class="card-title">Firewall</div>
+                            <div class="card-status-badge online" id="badge-firewall">ONLINE</div>
+                        </div>
+                        <div class="card-metrics gauges">
+                            <div class="metric-row circular">
+                                <span class="metric-name">CPU</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-cpu-firewall" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-cpu-firewall" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-cpu-firewall">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">MEM</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-mem-firewall" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-mem-firewall" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-mem-firewall">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">Pkts/s</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-net-firewall" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-net-firewall" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-net-firewall">0 pkts/s</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-primary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-primary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-primary-dc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">NET</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-primary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-primary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-primary-dc">0 MB/s</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
+                        <div class="card-footer">
+                            <span class="card-role">Network Firewall</span>
+                            <span class="card-pulse" id="pulse-firewall">●</span>
                         </div>
                     </div>
-<div class="card-footer">
-                        <span class="card-role">Primary Domain Controller</span>
-                        <span class="card-pulse" id="pulse-primary-dc">●</span>
+
+                    <!-- Database Server -->
+                    <div class="status-card critical-card" id="card-database">
+                        <div class="card-header">
+                            <div class="card-icon">💾</div>
+                            <div class="card-title">Database</div>
+                            <div class="card-status-badge online" id="badge-database">ONLINE</div>
+                        </div>
+                        <div class="card-metrics gauges">
+                            <div class="metric-row circular">
+                                <span class="metric-name">CPU</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-cpu-database" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-cpu-database" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-cpu-database">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">MEM</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-mem-database" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-mem-database" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-mem-database">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">Q/s</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-net-database" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-net-database" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-net-database">0 q/s</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-role">Database Server</span>
+                            <span class="card-pulse" id="pulse-database">●</span>
+                        </div>
+                    </div>
+
+                    <!-- EDR/Antivirus -->
+                    <div class="status-card critical-card" id="card-edr">
+                        <div class="card-header">
+                            <div class="card-icon">🛡️</div>
+                            <div class="card-title">EDR/AV</div>
+                            <div class="card-status-badge online" id="badge-edr">ONLINE</div>
+                        </div>
+                        <div class="card-metrics gauges">
+                            <div class="metric-row circular">
+                                <span class="metric-name">CPU</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-cpu-edr" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-cpu-edr" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-cpu-edr">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">MEM</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-mem-edr" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-mem-edr" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-mem-edr">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">Scans</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-net-edr" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-net-edr" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-net-edr">0 scans</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-role">Endpoint Detection &amp; Response</span>
+                            <span class="card-pulse" id="pulse-edr">●</span>
+                        </div>
+                    </div>
+
+                    <!-- Application Server -->
+                    <div class="status-card critical-card" id="card-application">
+                        <div class="card-header">
+                            <div class="card-icon">⚙️</div>
+                            <div class="card-title">Application</div>
+                            <div class="card-status-badge online" id="badge-application">ONLINE</div>
+                        </div>
+                        <div class="card-metrics gauges">
+                            <div class="metric-row circular">
+                                <span class="metric-name">CPU</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-cpu-application" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-cpu-application" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-cpu-application">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">MEM</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-mem-application" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-mem-application" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-mem-application">0%</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-row circular">
+                                <span class="metric-name">Req/s</span>
+                                <div class="circular-gauge">
+                                    <svg viewBox="0 0 200 120" class="gauge-svg">
+                                        <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
+                                        <path class="gauge-progress" id="arc-net-application" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                                        <line class="gauge-needle" id="needle-net-application" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
+                                        <circle cx="100" cy="100" r="6" fill="#fff"/>
+                                    </svg>
+                                    <div class="gauge-value" id="gauge-value-net-application">0</div>
+                                    <div class="gauge-labels">
+                                        <span class="gauge-label-low">Low</span>
+                                        <span class="gauge-label-high">High</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="card-role">Application Server</span>
+                            <span class="card-pulse" id="pulse-application">●</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Right: Timeline Chart -->
+            <section class="chart-section">
+                <h2 class="section-title">📈 Real-time Metrics</h2>
+                <div class="chart-container">
+                    <canvas id="timeline-canvas"></canvas>
+                </div>
+                <!-- Event Timeline below chart -->
+                <h2 class="section-title" style="margin-top:1.5rem">📋 Event Timeline</h2>
+                <div class="timeline" id="timeline">
+                    <div class="timeline-item info">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-time" id="start-time">--:--:--</span>
+                            <span class="timeline-desc">Dashboard initialised — awaiting metrics</span>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <!-- Secondary DC -->
-                <div class="status-card" id="card-secondary-dc">
-                    <div class="card-header">
-                        <div class="card-icon">🏗️</div>
-                        <div class="card-title">Secondary DC</div>
-                        <div class="card-status-badge online" id="badge-secondary-dc">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-secondary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-secondary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-secondary-dc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-secondary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-secondary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-secondary-dc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">NET</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-secondary-dc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-secondary-dc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-secondary-dc">0 MB/s</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Secondary Domain Controller</span>
-                        <span class="card-pulse" id="pulse-secondary-dc">●</span>
-                    </div>
-                </div>
+        </div><!-- end .dashboard-columns -->
 
-                <!-- SOC -->
-                <div class="status-card" id="card-soc">
-                    <div class="card-header">
-                        <div class="card-icon">🔍</div>
-                        <div class="card-title">SOC</div>
-                        <div class="card-status-badge online" id="badge-soc">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-soc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-soc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-soc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-soc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-soc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-soc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Alerts</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-soc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-soc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-soc">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Security Operations Center</span>
-                        <span class="card-pulse" id="pulse-soc">●</span>
-                    </div>
-                </div>
-
-                <!-- NOC -->
-                <div class="status-card" id="card-noc">
-                    <div class="card-header">
-                        <div class="card-icon">📡</div>
-                        <div class="card-title">NOC</div>
-                        <div class="card-status-badge online" id="badge-noc">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-noc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-noc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-noc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-noc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-noc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-noc">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">NET</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-noc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-noc" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-noc">0 MB/s</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Network Operations Center</span>
-                        <span class="card-pulse" id="pulse-noc">●</span>
-                    </div>
-                </div>
-
-                <!-- Backup -->
-                <div class="status-card" id="card-backup">
-                    <div class="card-header">
-                        <div class="card-icon">💾</div>
-                        <div class="card-title">Backup</div>
-                        <div class="card-status-badge online" id="badge-backup">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-backup" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-backup" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-backup">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-backup" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-backup" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-backup">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Storage</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-backup" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-backup" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-backup">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Backup &amp; Recovery Server</span>
-                        <span class="card-pulse" id="pulse-backup">●</span>
-                    </div>
-                </div>
-
-                <!-- Application -->
-                <div class="status-card" id="card-application">
-                    <div class="card-header">
-                        <div class="card-icon">⚙️</div>
-                        <div class="card-title">Application</div>
-                        <div class="card-status-badge online" id="badge-application">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-application" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-application" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-application">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-application" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-application" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-application">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Req/s</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-application" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-application" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-application">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Application Server</span>
-                        <span class="card-pulse" id="pulse-application">●</span>
-                    </div>
-                </div>
-
-                <!-- Firewall -->
-                <div class="status-card" id="card-firewall">
-                    <div class="card-header">
-                        <div class="card-icon">🔐</div>
-                        <div class="card-title">Firewall</div>
-                        <div class="card-status-badge online" id="badge-firewall">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-firewall" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-firewall" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-firewall">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-firewall" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-firewall" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-firewall">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Pkts/s</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-firewall" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-firewall" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-firewall">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Network Firewall</span>
-                        <span class="card-pulse" id="pulse-firewall">●</span>
-                    </div>
-                </div>
-
-                <!-- VPN Gateway -->
-                <div class="status-card" id="card-vpn">
-                    <div class="card-header">
-                        <div class="card-icon">🌐</div>
-                        <div class="card-title">VPN Gateway</div>
-                        <div class="card-status-badge online" id="badge-vpn">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-vpn" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-vpn" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-vpn">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-vpn" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-vpn" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-vpn">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Conns</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-vpn" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-vpn" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-vpn">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">VPN Gateway</span>
-                        <span class="card-pulse" id="pulse-vpn">●</span>
-                    </div>
-                </div>
-
-                <!-- Database Server -->
-                <div class="status-card" id="card-database">
-                    <div class="card-header">
-                        <div class="card-icon">🗄️</div>
-                        <div class="card-title">Database</div>
-                        <div class="card-status-badge online" id="badge-database">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-database" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-database" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-database">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-database" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-database" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-database">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Q/s</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-database" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-database" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-database">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Database Server</span>
-                        <span class="card-pulse" id="pulse-database">●</span>
-                    </div>
-                </div>
-
-                <!-- Email Gateway -->
-                <div class="status-card" id="card-email">
-                    <div class="card-header">
-                        <div class="card-icon">📧</div>
-                        <div class="card-title">Email Gateway</div>
-                        <div class="card-status-badge online" id="badge-email">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-email" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-email" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-email">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-email" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-email" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-email">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Msgs/hr</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-email" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-email" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-email">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Email Gateway</span>
-                        <span class="card-pulse" id="pulse-email">●</span>
-                    </div>
-                </div>
-
-                <!-- EDR/Antivirus -->
-                <div class="status-card" id="card-edr">
-                    <div class="card-header">
-                        <div class="card-icon">🛡️</div>
-                        <div class="card-title">EDR/AV</div>
-                        <div class="card-status-badge online" id="badge-edr">ONLINE</div>
-                    </div>
-                    <div class="card-metrics gauges">
-                        <div class="metric-row circular">
-                            <span class="metric-name">CPU</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-cpu-edr" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-cpu)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-cpu-edr" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-cpu-edr">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">MEM</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-mem-edr" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-mem)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-mem-edr" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-mem-edr">0%</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-row circular">
-                            <span class="metric-name">Scans</span>
-                            <div class="circular-gauge">
-                                <svg viewBox="0 0 200 120" class="gauge-svg">
-                                    <path class="gauge-background" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="15"/>
-                                    <path class="gauge-progress" id="arc-net-edr" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient-net)" stroke-width="15" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-                                    <line class="gauge-needle" id="needle-net-edr" x1="100" y1="100" x2="100" y2="30" stroke="#fff" stroke-width="3"/>
-                                    <circle cx="100" cy="100" r="6" fill="#fff"/>
-                                </svg>
-                                <div class="gauge-value" id="gauge-value-net-edr">0</div>
-                                <div class="gauge-labels">
-                                    <span class="gauge-label-low">Low</span>
-                                    <span class="gauge-label-high">High</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-<div class="card-footer">
-                        <span class="card-role">Endpoint Detection &amp; Response</span>
-                        <span class="card-pulse" id="pulse-edr">●</span>
-                    </div>
-                </div>
-
+        <!-- Collapsible Supporting Systems Table -->
+        <section class="supporting-systems">
+            <div class="collapsible-header" id="supporting-toggle" role="button" tabindex="0" aria-expanded="false">
+                <h2 class="section-title">🗄️ Supporting Systems
+                    <span class="toggle-icon">▶</span>
+                </h2>
+                <span class="collapsible-hint">Click to expand / collapse (6 systems)</span>
+            </div>
+            <div class="collapsible-body hidden" id="supporting-body">
+                <table class="systems-table">
+                    <thead>
+                        <tr>
+                            <th>System</th>
+                            <th>Status</th>
+                            <th>CPU</th>
+                            <th>Memory</th>
+                            <th>Network</th>
+                        </tr>
+                    </thead>
+                    <tbody id="supporting-table-body">
+                        <tr id="row-secondary-dc">
+                            <td><span class="tbl-icon">🏗️</span> Secondary DC</td>
+                            <td><span class="tbl-badge online" id="tbl-badge-secondary-dc">ONLINE</span></td>
+                            <td id="tbl-cpu-secondary-dc">—</td>
+                            <td id="tbl-mem-secondary-dc">—</td>
+                            <td id="tbl-net-secondary-dc">—</td>
+                        </tr>
+                        <tr id="row-soc">
+                            <td><span class="tbl-icon">🔍</span> SOC</td>
+                            <td><span class="tbl-badge online" id="tbl-badge-soc">ONLINE</span></td>
+                            <td id="tbl-cpu-soc">—</td>
+                            <td id="tbl-mem-soc">—</td>
+                            <td id="tbl-net-soc">—</td>
+                        </tr>
+                        <tr id="row-noc">
+                            <td><span class="tbl-icon">📡</span> NOC</td>
+                            <td><span class="tbl-badge online" id="tbl-badge-noc">ONLINE</span></td>
+                            <td id="tbl-cpu-noc">—</td>
+                            <td id="tbl-mem-noc">—</td>
+                            <td id="tbl-net-noc">—</td>
+                        </tr>
+                        <tr id="row-backup">
+                            <td><span class="tbl-icon">💿</span> Backup</td>
+                            <td><span class="tbl-badge online" id="tbl-badge-backup">ONLINE</span></td>
+                            <td id="tbl-cpu-backup">—</td>
+                            <td id="tbl-mem-backup">—</td>
+                            <td id="tbl-net-backup">—</td>
+                        </tr>
+                        <tr id="row-vpn">
+                            <td><span class="tbl-icon">🌐</span> VPN</td>
+                            <td><span class="tbl-badge online" id="tbl-badge-vpn">ONLINE</span></td>
+                            <td id="tbl-cpu-vpn">—</td>
+                            <td id="tbl-mem-vpn">—</td>
+                            <td id="tbl-net-vpn">—</td>
+                        </tr>
+                        <tr id="row-email">
+                            <td><span class="tbl-icon">📧</span> Email</td>
+                            <td><span class="tbl-badge online" id="tbl-badge-email">ONLINE</span></td>
+                            <td id="tbl-cpu-email">—</td>
+                            <td id="tbl-mem-email">—</td>
+                            <td id="tbl-net-email">—</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <!-- Event Timeline -->
-        <section class="timeline-section">
-            <h2 class="section-title">Event Timeline</h2>
-            <div class="timeline" id="timeline">
-                <div class="timeline-item info">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <span class="timeline-time" id="start-time">--:--:--</span>
-                        <span class="timeline-desc">Dashboard initialised — awaiting metrics</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- QR Code Section -->
-        <section class="qr-section">
-            <div class="qr-card">
-                <div class="qr-icon">📱</div>
-                <div class="qr-content">
-                    <h3>Follow Along Live</h3>
-                    <p>Scan the QR code or visit the URL below to view this dashboard on your device</p>
-                    <div class="qr-placeholder">
-                        <div class="qr-box">QR</div>
-                    </div>
-                    <div class="qr-url" id="qr-url">Loading URL...</div>
-                </div>
-            </div>
-        </section>
+        <!-- Hidden gauge elements for supporting systems (kept for app.js compatibility) -->
+        <div style="display:none" aria-hidden="true">
+            <!-- Secondary DC -->
+            <path id="arc-cpu-secondary-dc"/><line id="needle-cpu-secondary-dc"/><div id="gauge-value-cpu-secondary-dc"></div>
+            <path id="arc-mem-secondary-dc"/><line id="needle-mem-secondary-dc"/><div id="gauge-value-mem-secondary-dc"></div>
+            <path id="arc-net-secondary-dc"/><line id="needle-net-secondary-dc"/><div id="gauge-value-net-secondary-dc"></div>
+            <div id="badge-secondary-dc-card" class="card-status-badge online"></div>
+            <span id="pulse-secondary-dc"></span>
+            <!-- SOC -->
+            <path id="arc-cpu-soc"/><line id="needle-cpu-soc"/><div id="gauge-value-cpu-soc"></div>
+            <path id="arc-mem-soc"/><line id="needle-mem-soc"/><div id="gauge-value-mem-soc"></div>
+            <path id="arc-net-soc"/><line id="needle-net-soc"/><div id="gauge-value-net-soc"></div>
+            <div id="badge-soc-card" class="card-status-badge online"></div>
+            <span id="pulse-soc"></span>
+            <!-- NOC -->
+            <path id="arc-cpu-noc"/><line id="needle-cpu-noc"/><div id="gauge-value-cpu-noc"></div>
+            <path id="arc-mem-noc"/><line id="needle-mem-noc"/><div id="gauge-value-mem-noc"></div>
+            <path id="arc-net-noc"/><line id="needle-net-noc"/><div id="gauge-value-net-noc"></div>
+            <div id="badge-noc-card" class="card-status-badge online"></div>
+            <span id="pulse-noc"></span>
+            <!-- Backup -->
+            <path id="arc-cpu-backup"/><line id="needle-cpu-backup"/><div id="gauge-value-cpu-backup"></div>
+            <path id="arc-mem-backup"/><line id="needle-mem-backup"/><div id="gauge-value-mem-backup"></div>
+            <path id="arc-net-backup"/><line id="needle-net-backup"/><div id="gauge-value-net-backup"></div>
+            <div id="badge-backup-card" class="card-status-badge online"></div>
+            <span id="pulse-backup"></span>
+            <!-- VPN -->
+            <path id="arc-cpu-vpn"/><line id="needle-cpu-vpn"/><div id="gauge-value-cpu-vpn"></div>
+            <path id="arc-mem-vpn"/><line id="needle-mem-vpn"/><div id="gauge-value-mem-vpn"></div>
+            <path id="arc-net-vpn"/><line id="needle-net-vpn"/><div id="gauge-value-net-vpn"></div>
+            <div id="badge-vpn-card" class="card-status-badge online"></div>
+            <span id="pulse-vpn"></span>
+            <!-- Email -->
+            <path id="arc-cpu-email"/><line id="needle-cpu-email"/><div id="gauge-value-cpu-email"></div>
+            <path id="arc-mem-email"/><line id="needle-mem-email"/><div id="gauge-value-mem-email"></div>
+            <path id="arc-net-email"/><line id="needle-net-email"/><div id="gauge-value-net-email"></div>
+            <div id="badge-email-card" class="card-status-badge online"></div>
+            <span id="pulse-email"></span>
+        </div>
 
     </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -858,6 +604,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="sounds.js"></script>
     <script src="confetti.js"></script>
+    <script src="narration.js"></script>
+    <script src="timeline-chart.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
