@@ -26,7 +26,6 @@ const $ = (id) => document.getElementById(id);
 // --- Initialise ---
 document.addEventListener('DOMContentLoaded', () => {
     setStartTime();
-    setQrUrl();
     connectSSE();
 
     // Theme toggle
@@ -38,23 +37,51 @@ document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
             themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            if (timelineChart) timelineChart.draw();
         });
         // Set icon to match saved theme
         const saved = localStorage.getItem('theme') || 'dark';
         themeToggle.textContent = saved === 'dark' ? '🌙' : '☀️';
     }
+
+    // Narration toggle (header button)
+    const narrationBtn = $('narration-toggle-btn');
+    if (narrationBtn) {
+        narrationBtn.addEventListener('click', () => {
+            const enabled = narrationManager.toggle();
+            narrationBtn.textContent = enabled ? '🎤 ON' : '🎤 OFF';
+            narrationBtn.classList.toggle('active', enabled);
+            syncNarrationDemoBtn(enabled);
+        });
+    }
+
+    // Reset button (header)
+    const resetBtn = $('reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', resetDemo);
+
+    // Supporting systems collapsible
+    const toggleEl = $('supporting-toggle');
+    const bodyEl   = $('supporting-body');
+    if (toggleEl && bodyEl) {
+        const expand = () => {
+            const isExpanded = toggleEl.getAttribute('aria-expanded') === 'true';
+            toggleEl.setAttribute('aria-expanded', String(!isExpanded));
+            bodyEl.classList.toggle('hidden', isExpanded);
+        };
+        toggleEl.addEventListener('click', expand);
+        toggleEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); }
+        });
+    }
+
+    // Timeline chart
+    timelineChart = new TimelineChart('timeline-canvas');
 });
 
 /** Set the initial timestamp in the timeline */
 function setStartTime() {
     const el = $('start-time');
     if (el) el.textContent = formatTime(new Date());
-}
-
-/** Display the current dashboard URL in the QR section */
-function setQrUrl() {
-    const el = $('qr-url');
-    if (el) el.textContent = window.location.href;
 }
 
 // ================================================================
@@ -179,6 +206,7 @@ function handleUpdate(data) {
 function updateStatusCards(systems) {
     for (const [key, info] of Object.entries(systems)) {
         updateCard(key, info);
+        updateSupportingTableRow(key, info);
     }
 }
 
@@ -195,8 +223,9 @@ function updateCard(key, info) {
 
     const status = (info.status || 'online').toLowerCase();
 
-    // Update card border / class
-    card.className = 'status-card';
+    // Preserve extra classes (e.g. critical-card) added in HTML
+    const extraClasses = [...card.classList].filter(c => !['status-card', 'offline', 'warning'].includes(c));
+    card.className = ['status-card', ...extraClasses].join(' ');
     if (status === 'offline') card.classList.add('offline');
     else if (status === 'warning') card.classList.add('warning');
 
@@ -309,6 +338,60 @@ function updateOverview(systems) {
             overallEl.style.color = 'var(--color-warning)';
         }
     }
+
+    // KPI cards
+    updateKpiCard('kpi-systems', `${onlineCount}/${total}`,
+        onlineCount === total ? '+0%' : `-${total - onlineCount}`, onlineCount === total);
+
+    updateKpiCard('kpi-alerts', String(alertCount),
+        alertCount === 0 ? '+0' : `+${alertCount}`, alertCount === 0);
+
+    // Push aggregated CPU / network to timeline chart
+    if (timelineChart) {
+        const avgCpu = entries.reduce((s, e) => s + (e.cpu || 0), 0) / (entries.length || 1);
+        const avgNet = entries.reduce((s, e) => s + (e.network || 0), 0) / (entries.length || 1);
+        timelineChart.push(avgCpu, Math.min(avgNet * 5, 100), alertCount);
+    }
+}
+
+/**
+ * Update a KPI card value and change indicator.
+ * @param {string} id - base element id (e.g. 'kpi-systems')
+ * @param {string} value - display value
+ * @param {string} change - change string (e.g. '+0%')
+ * @param {boolean} positive - true = green, false = red
+ */
+function updateKpiCard(id, value, change, positive) {
+    const valEl    = $(id);
+    const changeEl = $(`${id}-change`);
+    if (valEl)    valEl.textContent = value;
+    if (changeEl) {
+        changeEl.textContent = change;
+        changeEl.className = `kpi-change ${positive ? 'positive' : 'negative'}`;
+    }
+}
+
+/** Update supporting systems table row */
+function updateSupportingTableRow(key, info) {
+    const supportingKeys = ['secondary-dc', 'soc', 'noc', 'backup', 'vpn', 'email'];
+    if (!supportingKeys.includes(key)) return;
+
+    const status = (info.status || 'online').toLowerCase();
+    const cpu    = info.cpu    != null ? `${info.cpu.toFixed(0)}%`    : '—';
+    const mem    = info.memory != null ? `${info.memory.toFixed(0)}%` : '—';
+    const net    = info.network != null ? `${info.network.toFixed(1)}` : '—';
+
+    const badgeEl = $(`tbl-badge-${key}`);
+    if (badgeEl) {
+        badgeEl.textContent = status.toUpperCase();
+        badgeEl.className   = `tbl-badge ${status}`;
+    }
+    const cpuEl = $(`tbl-cpu-${key}`);
+    const memEl = $(`tbl-mem-${key}`);
+    const netEl = $(`tbl-net-${key}`);
+    if (cpuEl) cpuEl.textContent = cpu;
+    if (memEl) memEl.textContent = mem;
+    if (netEl) netEl.textContent = net;
 }
 
 // ================================================================
@@ -452,11 +535,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const pauseBtn  = $('pause-demo-btn');
     const nextBtn   = $('next-phase-btn');
     const stopBtn   = $('stop-demo-btn');
+    const narrationDemoBtn = $('narration-demo-btn');
+    const resetDemoBtn     = $('reset-demo-btn');
 
     if (startBtn)  startBtn.addEventListener('click', startDemo);
     if (pauseBtn)  pauseBtn.addEventListener('click', togglePauseDemo);
     if (nextBtn)   nextBtn.addEventListener('click', nextPhaseDemo);
     if (stopBtn)   stopBtn.addEventListener('click', stopDemo);
+    if (narrationDemoBtn) {
+        narrationDemoBtn.addEventListener('click', () => {
+            const enabled = narrationManager.toggle();
+            syncNarrationDemoBtn(enabled);
+            // Keep header button in sync
+            const headerBtn = $('narration-toggle-btn');
+            if (headerBtn) {
+                headerBtn.textContent = enabled ? '🎤 ON' : '🎤 OFF';
+                headerBtn.classList.toggle('active', enabled);
+            }
+        });
+    }
+    if (resetDemoBtn) resetDemoBtn.addEventListener('click', resetDemo);
 });
 
 function startDemo() {
@@ -602,6 +700,11 @@ function triggerAttackPhase(phase) {
                 }
             }
 
+            // Voice narration
+            if (typeof narrationManager !== 'undefined') {
+                narrationManager.speak(phase);
+            }
+
             // Confetti on recovery
             if (phase === 'recovery') {
                 setTimeout(() => {
@@ -610,4 +713,87 @@ function triggerAttackPhase(phase) {
             }
         })
         .catch(err => console.error(`❌ Failed to trigger phase "${phase}"`, err));
+}
+
+// ================================================================
+// Reset Demo
+// ================================================================
+
+function resetDemo() {
+    stopDemo();
+
+    // Reset all critical system gauges to baseline values
+    const baseline = {
+        'primary-dc':  { cpu: 20, mem: 45, net: 12 },
+        'firewall':    { cpu: 15, mem: 30, net: 800 },
+        'database':    { cpu: 45, mem: 60, net: 150 },
+        'edr':         { cpu: 20, mem: 35, net: 5 },
+        'application': { cpu: 42, mem: 55, net: 120 },
+    };
+
+    Object.entries(baseline).forEach(([key, vals]) => {
+        updateCircularGauge(key, 'cpu', vals.cpu, `${vals.cpu}%`);
+        updateCircularGauge(key, 'mem', vals.mem, `${vals.mem}%`);
+        updateCircularGauge(key, 'net', Math.min(vals.net / 20, 100), `${vals.net}`);
+
+        const card  = $(`card-${key}`);
+        const badge = $(`badge-${key}`);
+        const pulse = $(`pulse-${key}`);
+        if (card)  { card.className = 'status-card critical-card'; }
+        if (badge) { badge.className = 'card-status-badge online'; badge.textContent = 'ONLINE'; }
+        if (pulse) { pulse.className = 'card-pulse'; }
+    });
+
+    // Reset KPI cards
+    updateKpiCard('kpi-systems', '11/11', '+0%', true);
+    updateKpiCard('kpi-alerts',  '0',     '+0',  true);
+    updateKpiCard('kpi-network', '2.4 GB/s', '+0.2%', true);
+    updateKpiCard('kpi-backup',  '100%', '+0.4%', true);
+
+    // Clear alerts
+    hideAlertBanner();
+
+    // Reset chart
+    if (timelineChart) timelineChart.reset();
+
+    // Stop narration
+    if (typeof narrationManager !== 'undefined') narrationManager.stop();
+
+    addTimelineEvent('success', '🔄 All systems reset to operational baseline');
+    showToast('✅ All systems operational', 'success');
+}
+
+// ================================================================
+// Toast Notification
+// ================================================================
+
+let toastTimeout = null;
+
+function showToast(message, type = 'info') {
+    const toast = $('toast');
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+
+    // Force reflow so animation restarts if called in rapid succession
+    void toast.offsetWidth;
+    toast.classList.add('show');
+
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => { toast.className = 'toast hidden'; }, 350);
+    }, 3000);
+}
+
+// ================================================================
+// Narration sync helpers
+// ================================================================
+
+function syncNarrationDemoBtn(enabled) {
+    const btn = $('narration-demo-btn');
+    if (!btn) return;
+    btn.textContent = `🎤 Narration: ${enabled ? 'ON' : 'OFF'}`;
+    btn.classList.toggle('active', enabled);
 }
