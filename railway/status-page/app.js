@@ -17,11 +17,32 @@ const MAX_TIMELINE_ITEMS = 50;
 // --- DOM Helpers ---
 const $ = (id) => document.getElementById(id);
 
+// --- Theme ---
+(function initTheme() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+})();
+
 // --- Initialise ---
 document.addEventListener('DOMContentLoaded', () => {
     setStartTime();
     setQrUrl();
     connectSSE();
+
+    // Theme toggle
+    const themeToggle = $('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+        });
+        // Set icon to match saved theme
+        const saved = localStorage.getItem('theme') || 'dark';
+        themeToggle.textContent = saved === 'dark' ? '🌙' : '☀️';
+    }
 });
 
 /** Set the initial timestamp in the timeline */
@@ -190,61 +211,73 @@ function updateCard(key, info) {
         pulse.className = `card-pulse ${status !== 'online' ? status : ''}`;
     }
 
-    // Update metric bars
+    // Update circular gauges
     const cpu = clamp(info.cpu ?? 0, 0, 100);
     const mem = clamp(info.memory ?? 0, 0, 100);
     const net = info.network ?? 0;
-    const netPct = clamp(net / 100 * 100, 0, 100); // scale for bar
+    const netPct = clamp(net, 0, 100);
 
-    setMetricBar(`cpu-${key}`, cpu, `cpu-pct-${key}`, `${cpu.toFixed(0)}%`);
-    setMetricBar(`mem-${key}`, mem, `mem-pct-${key}`, `${mem.toFixed(0)}%`);
+    updateCircularGauge(key, 'cpu', cpu, `${cpu.toFixed(0)}%`);
+    updateCircularGauge(key, 'mem', mem, `${mem.toFixed(0)}%`);
 
-    // Third metric varies by system type
-    const netEl = $(`net-${key}`);
-    const netPctEl = $(`net-pct-${key}`);
-    if (netEl) {
-        netEl.style.width = `${netPct}%`;
-        applyBarColour(netEl, netPct);
+    // Third metric label varies by system type
+    let netLabel;
+    if (key === 'soc') {
+        netLabel = `${Math.round(net)}`;
+    } else if (key === 'backup') {
+        netLabel = `${net.toFixed(0)}%`;
+    } else if (key === 'application') {
+        netLabel = `${Math.round(net)}`;
+    } else if (key === 'firewall') {
+        netLabel = `${Math.round(net)} pkts/s`;
+    } else if (key === 'vpn') {
+        netLabel = `${Math.round(net)} conn`;
+    } else if (key === 'database') {
+        netLabel = `${Math.round(net)} q/s`;
+    } else if (key === 'email') {
+        netLabel = `${Math.round(net)} msgs/hr`;
+    } else if (key === 'edr') {
+        netLabel = `${Math.round(net)} scans`;
+    } else {
+        netLabel = `${net.toFixed(1)} MB/s`;
     }
-    if (netPctEl) {
-        if (key === 'soc') {
-            netPctEl.textContent = `${Math.round(net)}`;
-        } else if (key === 'backup') {
-            netPctEl.textContent = `${net.toFixed(0)}%`;
-        } else if (key === 'application') {
-            netPctEl.textContent = `${Math.round(net)}`;
-        } else if (key === 'firewall') {
-            netPctEl.textContent = `${Math.round(net)} pkts/s`;
-        } else if (key === 'vpn') {
-            netPctEl.textContent = `${Math.round(net)} conn`;
-        } else if (key === 'database') {
-            netPctEl.textContent = `${Math.round(net)} q/s`;
-        } else if (key === 'email') {
-            netPctEl.textContent = `${Math.round(net)} msgs/hr`;
-        } else if (key === 'edr') {
-            netPctEl.textContent = `${Math.round(net)} scans`;
-        } else {
-            netPctEl.textContent = `${net.toFixed(1)} MB/s`;
-        }
-    }
+    updateCircularGauge(key, 'net', netPct, netLabel);
 }
 
-/** Set a metric bar width + label and apply colour based on value */
-function setMetricBar(barId, pct, labelId, labelText) {
-    const bar = $(barId);
-    const label = $(labelId);
-    if (bar) {
-        bar.style.width = `${pct}%`;
-        applyBarColour(bar, pct);
-    }
-    if (label) label.textContent = labelText;
-}
+/**
+ * Update a circular gauge (CPU, Memory, Network).
+ * @param {string} systemKey - e.g. 'primary-dc'
+ * @param {string} metricType - 'cpu', 'mem', or 'net'
+ * @param {number} pct - 0-100 percentage for arc/needle position
+ * @param {string} displayText - text to show in the gauge centre
+ */
+function updateCircularGauge(systemKey, metricType, pct, displayText) {
+    const arc = $(`arc-${metricType}-${systemKey}`);
+    const needle = $(`needle-${metricType}-${systemKey}`);
+    const valueEl = $(`gauge-value-${metricType}-${systemKey}`);
 
-/** Colour a metric bar based on percentage threshold */
-function applyBarColour(bar, pct) {
-    bar.className = 'metric-bar';
-    if (pct >= 85) bar.classList.add('critical');
-    else if (pct >= 65) bar.classList.add('warning');
+    if (!arc || !needle || !valueEl) return;
+
+    // Arc dashoffset: 251.2 is full arc length (π × 80)
+    const maxDash = 251.2;
+    const offset = maxDash - (maxDash * (pct / 100));
+    arc.style.strokeDashoffset = offset;
+
+    // Needle rotation: -90deg (0%) → +90deg (100%)
+    const rotation = -90 + (180 * (pct / 100));
+    needle.style.transform = `rotate(${rotation}deg)`;
+
+    // Update displayed value
+    valueEl.textContent = displayText;
+
+    // Critical state (>85%)
+    if (pct > 85) {
+        valueEl.classList.add('critical');
+        needle.classList.add('attack');
+    } else {
+        valueEl.classList.remove('critical');
+        needle.classList.remove('attack');
+    }
 }
 
 /** Update the overall system overview numbers */
@@ -385,41 +418,69 @@ function escapeHtml(str) {
 let demoInterval = null;
 let demoTimeoutIds = [];
 let demoStartTime = null;
+let demoPaused = false;
+let demoPauseTime = 0;
+let demoPhaseCursor = 0; // index of the next phase to be scheduled
 
-const DEMO_PHASES = [
+const DEMO_PHASES_NORMAL = [
     { phase: 'start',     delay:  5000, duration: 10000, message: '🔴 Attack Detected' },
     { phase: 'spreading', delay: 15000, duration: 10000, message: '🔴 Ransomware Spreading' },
     { phase: 'encrypted', delay: 25000, duration: 10000, message: '💀 Systems Encrypted' },
     { phase: 'recovery',  delay: 35000, duration: 10000, message: '✅ Recovery Initiated' },
 ];
 
-const DEMO_TOTAL_DURATION = 45000; // 45 seconds
+const DEMO_PHASES_DRAMATIC = [
+    { phase: 'start',     delay:  20000, duration: 30000, message: '🔴 Attack Detected' },
+    { phase: 'spreading', delay:  50000, duration: 30000, message: '🔴 Ransomware Spreading' },
+    { phase: 'encrypted', delay:  80000, duration: 20000, message: '💀 Systems Encrypted' },
+    { phase: 'recovery',  delay: 100000, duration: 20000, message: '✅ Recovery Initiated' },
+];
+
+function getDemoPhases() {
+    const sel = document.querySelector('input[name="demo-mode"]:checked');
+    return sel && sel.value === 'dramatic' ? DEMO_PHASES_DRAMATIC : DEMO_PHASES_NORMAL;
+}
+
+function getDemoTotal() {
+    const phases = getDemoPhases();
+    const last = phases[phases.length - 1];
+    return last.delay + last.duration;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    const startBtn = $('start-demo-btn');
-    const stopBtn  = $('stop-demo-btn');
+    const startBtn  = $('start-demo-btn');
+    const pauseBtn  = $('pause-demo-btn');
+    const nextBtn   = $('next-phase-btn');
+    const stopBtn   = $('stop-demo-btn');
 
-    if (startBtn) startBtn.addEventListener('click', startDemo);
-    if (stopBtn)  stopBtn.addEventListener('click', stopDemo);
+    if (startBtn)  startBtn.addEventListener('click', startDemo);
+    if (pauseBtn)  pauseBtn.addEventListener('click', togglePauseDemo);
+    if (nextBtn)   nextBtn.addEventListener('click', nextPhaseDemo);
+    if (stopBtn)   stopBtn.addEventListener('click', stopDemo);
 });
 
 function startDemo() {
-    const startBtn   = $('start-demo-btn');
-    const stopBtn    = $('stop-demo-btn');
-    const progress   = $('demo-progress');
+    const startBtn    = $('start-demo-btn');
+    const progress    = $('demo-progress');
     const progressBar = $('demo-progress-bar');
-    const phaseEl    = $('demo-phase');
-    const timerEl    = $('demo-timer');
+    const phaseEl     = $('demo-phase');
+    const timerEl     = $('demo-timer');
 
-    if (startBtn)   startBtn.classList.add('hidden');
-    if (stopBtn)    stopBtn.classList.remove('hidden');
-    if (progress)   progress.classList.remove('hidden');
+    if (startBtn)    startBtn.classList.add('hidden');
+    if (progress)    progress.classList.remove('hidden');
 
+    demoPaused = false;
+    demoPhaseCursor = 0;
     demoStartTime = Date.now();
 
+    const phases = getDemoPhases();
+    const total = getDemoTotal();
+
     demoInterval = setInterval(() => {
+        if (demoPaused) return;
+
         const elapsed = Date.now() - demoStartTime;
-        const percent = Math.min((elapsed / DEMO_TOTAL_DURATION) * 100, 100);
+        const percent = Math.min((elapsed / total) * 100, 100);
 
         if (progressBar) progressBar.style.width = `${percent}%`;
 
@@ -428,16 +489,19 @@ function startDemo() {
         const secs    = seconds % 60;
         if (timerEl) timerEl.textContent = `${minutes}:${secs.toString().padStart(2, '0')}`;
 
-        const currentPhase = DEMO_PHASES.find(
+        const currentPhase = phases.find(
             p => elapsed >= p.delay && elapsed < p.delay + p.duration
         );
         if (currentPhase && phaseEl) phaseEl.textContent = currentPhase.message;
 
-        if (elapsed >= DEMO_TOTAL_DURATION) stopDemo();
+        if (elapsed >= total) stopDemo();
     }, 100);
 
-    DEMO_PHASES.forEach(({ phase, delay }) => {
-        const timeoutId = setTimeout(() => triggerAttackPhase(phase), delay);
+    phases.forEach(({ phase, delay }, idx) => {
+        const timeoutId = setTimeout(() => {
+            demoPhaseCursor = idx + 1;
+            triggerAttackPhase(phase);
+        }, delay);
         demoTimeoutIds.push(timeoutId);
     });
 
@@ -446,9 +510,9 @@ function startDemo() {
 
 function stopDemo() {
     const startBtn    = $('start-demo-btn');
-    const stopBtn     = $('stop-demo-btn');
     const progress    = $('demo-progress');
     const progressBar = $('demo-progress-bar');
+    const pauseBtn    = $('pause-demo-btn');
 
     if (demoInterval) {
         clearInterval(demoInterval);
@@ -457,13 +521,62 @@ function stopDemo() {
 
     demoTimeoutIds.forEach(id => clearTimeout(id));
     demoTimeoutIds = [];
+    demoPaused = false;
+    demoPhaseCursor = 0;
 
     if (startBtn)    startBtn.classList.remove('hidden');
-    if (stopBtn)     stopBtn.classList.add('hidden');
     if (progress)    progress.classList.add('hidden');
     if (progressBar) progressBar.style.width = '0%';
+    if (pauseBtn)    pauseBtn.textContent = '⏸️ Pause';
 
     addTimelineEvent('info', '⏹️ Demo stopped');
+}
+
+function togglePauseDemo() {
+    const pauseBtn = $('pause-demo-btn');
+    if (demoPaused) {
+        // Resume: shift start time by pause duration
+        const pauseDuration = Date.now() - demoPauseTime;
+        demoStartTime += pauseDuration;
+        demoPaused = false;
+        if (pauseBtn) pauseBtn.textContent = '⏸️ Pause';
+        addTimelineEvent('info', '▶️ Demo resumed');
+    } else {
+        demoPaused = true;
+        demoPauseTime = Date.now();
+        if (pauseBtn) pauseBtn.textContent = '▶️ Resume';
+        addTimelineEvent('info', '⏸️ Demo paused');
+    }
+}
+
+function nextPhaseDemo() {
+    const phases = getDemoPhases();
+    if (demoPhaseCursor >= phases.length) return;
+
+    // Cancel any pending timeout for the next phase
+    const nextPhase = phases[demoPhaseCursor];
+    if (!nextPhase) return;
+
+    // Clear all pending timeouts
+    demoTimeoutIds.forEach(id => clearTimeout(id));
+    demoTimeoutIds = [];
+
+    // Trigger the next phase immediately and compute remaining phases before advancing cursor
+    triggerAttackPhase(nextPhase.phase);
+    const remaining = phases.slice(demoPhaseCursor + 1);
+    demoPhaseCursor++;
+
+    // Reschedule remaining phases relative to now
+    remaining.forEach(({ phase }, i) => {
+        const delay = (i + 1) * 5000; // 5s gaps between remaining phases
+        const timeoutId = setTimeout(() => {
+            demoPhaseCursor++;
+            triggerAttackPhase(phase);
+        }, delay);
+        demoTimeoutIds.push(timeoutId);
+    });
+
+    addTimelineEvent('info', `⏭️ Skipped to: ${nextPhase.phase}`);
 }
 
 function triggerAttackPhase(phase) {
@@ -473,6 +586,28 @@ function triggerAttackPhase(phase) {
         body: JSON.stringify({ phase }),
     })
         .then(res => res.json())
-        .then(data => console.log(`✅ Demo phase "${phase}" triggered`, data))
+        .then(data => {
+            console.log(`✅ Demo phase "${phase}" triggered`, data);
+
+            // Sound effects
+            if (typeof soundManager !== 'undefined') {
+                if (phase === 'start') {
+                    soundManager.play('alarmStart');
+                } else if (phase === 'spreading') {
+                    soundManager.play('warning');
+                } else if (phase === 'encrypted') {
+                    soundManager.play('critical');
+                } else if (phase === 'recovery') {
+                    soundManager.play('success');
+                }
+            }
+
+            // Confetti on recovery
+            if (phase === 'recovery') {
+                setTimeout(() => {
+                    if (typeof launchConfetti === 'function') launchConfetti();
+                }, 500);
+            }
+        })
         .catch(err => console.error(`❌ Failed to trigger phase "${phase}"`, err));
 }
