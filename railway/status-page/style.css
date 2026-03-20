@@ -1,8 +1,8 @@
 /* ============================================================
-   Cyber Resilience Status Dashboard - Dark Theme Stylesheet
+   Cyber Resilience Status Dashboard - Stylesheet
    ============================================================ */
 
-/* --- CSS Variables --- */
+/* --- CSS Variables (Dark theme defaults) --- */
 :root {
     --bg-primary: #0a0e27;
     --bg-secondary: #0f1535;
@@ -23,6 +23,28 @@
     --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
     --gradient-card: linear-gradient(135deg, #141836 0%, #1a2040 100%);
     --gradient-header: linear-gradient(135deg, #0f1535 0%, #1a1f4a 100%);
+    --color-text: #e2e8f0;
+    --gauge-bg: #2a2a4a;
+    --gauge-label: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Light Theme Overrides --- */
+[data-theme="light"] {
+    --bg-primary: #f0f2f5;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f6f8fa;
+    --text-primary: #24292f;
+    --text-secondary: #57606a;
+    --text-muted: #8c959f;
+    --border-color: #d0d7de;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --gradient-card: linear-gradient(135deg, #ffffff 0%, #f6f8fa 100%);
+    --gradient-header: linear-gradient(135deg, #24292f 0%, #32383f 100%);
+    --color-text: #24292f;
+    --gauge-bg: #e0e4ea;
+    --gauge-label: rgba(0, 0, 0, 0.5);
 }
 
 /* --- Reset & Base --- */
@@ -42,6 +64,7 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* --- Alert Banner --- */
@@ -774,4 +797,180 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+/* ================================================================
+   Theme Toggle Button
+   ================================================================ */
+
+.theme-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+[data-theme="light"] .theme-toggle {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ================================================================
+   Circular Gauge Styles
+   ================================================================ */
+
+.card-metrics.gauges {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: flex-start;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.metric-row.circular {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 70px;
+}
+
+.metric-row.circular .metric-name {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: auto;
+    margin-bottom: 2px;
+}
+
+.circular-gauge {
+    position: relative;
+    width: 90px;
+    height: 60px;
+}
+
+.gauge-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.gauge-background {
+    opacity: 0.3;
+    stroke: var(--gauge-bg);
+}
+
+.gauge-progress {
+    transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
+}
+
+.gauge-needle {
+    transform-origin: 100px 100px;
+    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.gauge-needle.attack {
+    animation: needleShake 0.3s infinite;
+}
+
+@keyframes needleShake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+.gauge-value {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    text-align: center;
+}
+
+.gauge-value.critical {
+    color: #ef233c;
+    animation: valuePulse 0.5s infinite;
+}
+
+@keyframes valuePulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.15); }
+}
+
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.6rem;
+    color: var(--gauge-label);
+    margin-top: 2px;
+}
+
+/* ================================================================
+   Demo Controls — Dramatic Mode & Pause/Resume
+   ================================================================ */
+
+.demo-mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.demo-mode-selector label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.demo-controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.demo-control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.demo-control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+[data-theme="light"] .demo-control-btn {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.2);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .demo-control-btn:hover {
+    background: rgba(0, 0, 0, 0.15);
 }
