@@ -1,0 +1,15 @@
+# Force Node.js runtime for Railway deployment
+[phases.setup]
+nixPkgs = ['nodejs-18_x', 'npm-9_x']
+
+[phases.install]
+cmds = ['cd railway/api && npm install']
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = 'cd railway/api && node server.js'
+
+[variables]
+NODE_ENV = 'production'
