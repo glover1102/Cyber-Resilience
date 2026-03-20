@@ -51,7 +51,7 @@
                 </div>
                 <div class="overview-metric">
                     <span class="metric-label">Systems Online</span>
-                    <span class="metric-value" id="systems-online">6/6</span>
+                    <span class="metric-value" id="systems-online">11/11</span>
                 </div>
                 <div class="overview-metric">
                     <span class="metric-label">Active Alerts</span>
@@ -62,6 +62,25 @@
                     <span class="metric-value" id="uptime">99.99%</span>
                 </div>
             </div>
+        </section>
+
+        <!-- Auto Demo Control -->
+        <section class="demo-control">
+            <button id="start-demo-btn" class="demo-button">
+                🎬 START DEMO
+            </button>
+            <div id="demo-progress" class="demo-progress hidden">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="demo-progress-bar"></div>
+                </div>
+                <div class="demo-status">
+                    <span id="demo-phase">Initializing...</span>
+                    <span id="demo-timer">0:00</span>
+                </div>
+            </div>
+            <button id="stop-demo-btn" class="demo-button-stop hidden">
+                ⏹️ STOP DEMO
+            </button>
         </section>
 
         <!-- Status Cards Grid -->
@@ -282,6 +301,186 @@
                     <div class="card-footer">
                         <span class="card-role">Application Server</span>
                         <span class="card-pulse" id="pulse-application">●</span>
+                    </div>
+                </div>
+
+                <!-- Firewall -->
+                <div class="status-card" id="card-firewall">
+                    <div class="card-header">
+                        <div class="card-icon">🔐</div>
+                        <div class="card-title">Firewall</div>
+                        <div class="card-status-badge online" id="badge-firewall">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-firewall" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-firewall">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-firewall" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-firewall">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Packets/s</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-firewall" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-firewall">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Network Firewall</span>
+                        <span class="card-pulse" id="pulse-firewall">●</span>
+                    </div>
+                </div>
+
+                <!-- VPN Gateway -->
+                <div class="status-card" id="card-vpn">
+                    <div class="card-header">
+                        <div class="card-icon">🌐</div>
+                        <div class="card-title">VPN Gateway</div>
+                        <div class="card-status-badge online" id="badge-vpn">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-vpn" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-vpn">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-vpn" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-vpn">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Connections</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-vpn" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-vpn">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">VPN Gateway</span>
+                        <span class="card-pulse" id="pulse-vpn">●</span>
+                    </div>
+                </div>
+
+                <!-- Database Server -->
+                <div class="status-card" id="card-database">
+                    <div class="card-header">
+                        <div class="card-icon">🗄️</div>
+                        <div class="card-title">Database</div>
+                        <div class="card-status-badge online" id="badge-database">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-database" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-database">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-database" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-database">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Queries/s</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-database" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-database">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Database Server</span>
+                        <span class="card-pulse" id="pulse-database">●</span>
+                    </div>
+                </div>
+
+                <!-- Email Gateway -->
+                <div class="status-card" id="card-email">
+                    <div class="card-header">
+                        <div class="card-icon">📧</div>
+                        <div class="card-title">Email Gateway</div>
+                        <div class="card-status-badge online" id="badge-email">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-email" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-email">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-email" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-email">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Msgs/hr</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-email" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-email">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Email Gateway</span>
+                        <span class="card-pulse" id="pulse-email">●</span>
+                    </div>
+                </div>
+
+                <!-- EDR/Antivirus -->
+                <div class="status-card" id="card-edr">
+                    <div class="card-header">
+                        <div class="card-icon">🛡️</div>
+                        <div class="card-title">EDR/AV</div>
+                        <div class="card-status-badge online" id="badge-edr">ONLINE</div>
+                    </div>
+                    <div class="card-metrics">
+                        <div class="metric-row">
+                            <span class="metric-name">CPU</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="cpu-edr" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="cpu-pct-edr">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">MEM</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="mem-edr" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="mem-pct-edr">0%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Scans</span>
+                            <div class="metric-bar-container">
+                                <div class="metric-bar" id="net-edr" style="width: 0%"></div>
+                            </div>
+                            <span class="metric-pct" id="net-pct-edr">0</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-role">Endpoint Detection &amp; Response</span>
+                        <span class="card-pulse" id="pulse-edr">●</span>
                     </div>
                 </div>
 

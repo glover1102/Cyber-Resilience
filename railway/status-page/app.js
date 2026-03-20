@@ -213,6 +213,16 @@ function updateCard(key, info) {
             netPctEl.textContent = `${net.toFixed(0)}%`;
         } else if (key === 'application') {
             netPctEl.textContent = `${Math.round(net)}`;
+        } else if (key === 'firewall') {
+            netPctEl.textContent = `${Math.round(net)} pkts/s`;
+        } else if (key === 'vpn') {
+            netPctEl.textContent = `${Math.round(net)} conn`;
+        } else if (key === 'database') {
+            netPctEl.textContent = `${Math.round(net)} q/s`;
+        } else if (key === 'email') {
+            netPctEl.textContent = `${Math.round(net)} msgs/hr`;
+        } else if (key === 'edr') {
+            netPctEl.textContent = `${Math.round(net)} scans`;
         } else {
             netPctEl.textContent = `${net.toFixed(1)} MB/s`;
         }
@@ -366,4 +376,103 @@ function escapeHtml(str) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+}
+
+// ================================================================
+// Auto Demo Mode
+// ================================================================
+
+let demoInterval = null;
+let demoTimeoutIds = [];
+let demoStartTime = null;
+
+const DEMO_PHASES = [
+    { phase: 'start',     delay:  5000, duration: 10000, message: '🔴 Attack Detected' },
+    { phase: 'spreading', delay: 15000, duration: 10000, message: '🔴 Ransomware Spreading' },
+    { phase: 'encrypted', delay: 25000, duration: 10000, message: '💀 Systems Encrypted' },
+    { phase: 'recovery',  delay: 35000, duration: 10000, message: '✅ Recovery Initiated' },
+];
+
+const DEMO_TOTAL_DURATION = 45000; // 45 seconds
+
+document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = $('start-demo-btn');
+    const stopBtn  = $('stop-demo-btn');
+
+    if (startBtn) startBtn.addEventListener('click', startDemo);
+    if (stopBtn)  stopBtn.addEventListener('click', stopDemo);
+});
+
+function startDemo() {
+    const startBtn   = $('start-demo-btn');
+    const stopBtn    = $('stop-demo-btn');
+    const progress   = $('demo-progress');
+    const progressBar = $('demo-progress-bar');
+    const phaseEl    = $('demo-phase');
+    const timerEl    = $('demo-timer');
+
+    if (startBtn)   startBtn.classList.add('hidden');
+    if (stopBtn)    stopBtn.classList.remove('hidden');
+    if (progress)   progress.classList.remove('hidden');
+
+    demoStartTime = Date.now();
+
+    demoInterval = setInterval(() => {
+        const elapsed = Date.now() - demoStartTime;
+        const percent = Math.min((elapsed / DEMO_TOTAL_DURATION) * 100, 100);
+
+        if (progressBar) progressBar.style.width = `${percent}%`;
+
+        const seconds = Math.floor(elapsed / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const secs    = seconds % 60;
+        if (timerEl) timerEl.textContent = `${minutes}:${secs.toString().padStart(2, '0')}`;
+
+        const currentPhase = DEMO_PHASES.find(
+            p => elapsed >= p.delay && elapsed < p.delay + p.duration
+        );
+        if (currentPhase && phaseEl) phaseEl.textContent = currentPhase.message;
+
+        if (elapsed >= DEMO_TOTAL_DURATION) stopDemo();
+    }, 100);
+
+    DEMO_PHASES.forEach(({ phase, delay }) => {
+        const timeoutId = setTimeout(() => triggerAttackPhase(phase), delay);
+        demoTimeoutIds.push(timeoutId);
+    });
+
+    addTimelineEvent('info', '🎬 Auto demo started');
+}
+
+function stopDemo() {
+    const startBtn    = $('start-demo-btn');
+    const stopBtn     = $('stop-demo-btn');
+    const progress    = $('demo-progress');
+    const progressBar = $('demo-progress-bar');
+
+    if (demoInterval) {
+        clearInterval(demoInterval);
+        demoInterval = null;
+    }
+
+    demoTimeoutIds.forEach(id => clearTimeout(id));
+    demoTimeoutIds = [];
+
+    if (startBtn)    startBtn.classList.remove('hidden');
+    if (stopBtn)     stopBtn.classList.add('hidden');
+    if (progress)    progress.classList.add('hidden');
+    if (progressBar) progressBar.style.width = '0%';
+
+    addTimelineEvent('info', '⏹️ Demo stopped');
+}
+
+function triggerAttackPhase(phase) {
+    fetch(`${API_BASE}/api/simulate-attack`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phase }),
+    })
+        .then(res => res.json())
+        .then(data => console.log(`✅ Demo phase "${phase}" triggered`, data))
+        .catch(err => console.error(`❌ Failed to trigger phase "${phase}"`, err));
 }
