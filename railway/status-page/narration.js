@@ -52,6 +52,18 @@ class NarrationManager {
         }
     }
 
+    pause() {
+        if (this.supported && speechSynthesis.speaking && !speechSynthesis.paused) {
+            speechSynthesis.pause();
+        }
+    }
+
+    resume() {
+        if (this.supported && speechSynthesis.paused) {
+            speechSynthesis.resume();
+        }
+    }
+
     stop() {
         if (this.supported) speechSynthesis.cancel();
     }

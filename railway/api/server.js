@@ -53,6 +53,16 @@ let systemStatus = {
 let attackActive = false;
 let alertMessage = '';
 
+/** Master control state */
+let masterControlState = {
+    isMasterMode: false,
+    demoActive: false,
+    demoPaused: false,
+    currentPhase: null,
+    demoStartTime: null,
+    pauseTime: null,
+};
+
 /** Registered SSE clients */
 const sseClients = new Set();
 
@@ -161,6 +171,7 @@ app.get('/api/stream', (req, res) => {
     res.write(`event: status\ndata: ${initial}\n\n`);
 
     sseClients.add(res);
+    broadcast('viewer-count', { count: sseClients.size });
 
     // Keep-alive ping every 25 seconds
     const keepAlive = setInterval(() => {
@@ -175,6 +186,7 @@ app.get('/api/stream', (req, res) => {
     req.on('close', () => {
         clearInterval(keepAlive);
         sseClients.delete(res);
+        broadcast('viewer-count', { count: sseClients.size });
     });
 });
 
@@ -255,6 +267,116 @@ app.post('/api/simulate-attack', (req, res) => {
     }
 
     res.json({ ok: true, phase, attack_active: attackActive });
+});
+
+// ----------------------------------------------------------------
+// Master Control Routes
+// ----------------------------------------------------------------
+
+/**
+ * GET /api/master-control/state
+ * Returns the current master control state.
+ */
+app.get('/api/master-control/state', (_req, res) => {
+    res.json({ ...masterControlState, viewerCount: sseClients.size });
+});
+
+/**
+ * POST /api/master-control/play
+ * Master initiates demo playback for all viewers.
+ */
+app.post('/api/master-control/play', (req, res) => {
+    const token = req.headers['x-master-token'] || (req.body && req.body.token);
+    if (process.env.MASTER_TOKEN && token !== process.env.MASTER_TOKEN) {
+        return res.status(403).json({ error: 'Invalid master token' });
+    }
+    masterControlState.isMasterMode = true;
+    masterControlState.demoActive = true;
+    masterControlState.demoPaused = false;
+    masterControlState.currentPhase = null;
+    masterControlState.demoStartTime = Date.now();
+    masterControlState.pauseTime = null;
+    broadcast('master-play', { timestamp: new Date().toISOString() });
+    res.json({ ok: true, action: 'play' });
+});
+
+/**
+ * POST /api/master-control/pause
+ * Master pauses demo for all viewers.
+ */
+app.post('/api/master-control/pause', (req, res) => {
+    const token = req.headers['x-master-token'] || (req.body && req.body.token);
+    if (process.env.MASTER_TOKEN && token !== process.env.MASTER_TOKEN) {
+        return res.status(403).json({ error: 'Invalid master token' });
+    }
+    masterControlState.demoPaused = true;
+    masterControlState.pauseTime = Date.now();
+    broadcast('master-pause', { timestamp: new Date().toISOString() });
+    res.json({ ok: true, action: 'pause' });
+});
+
+/**
+ * POST /api/master-control/resume
+ * Master resumes demo for all viewers.
+ */
+app.post('/api/master-control/resume', (req, res) => {
+    const token = req.headers['x-master-token'] || (req.body && req.body.token);
+    if (process.env.MASTER_TOKEN && token !== process.env.MASTER_TOKEN) {
+        return res.status(403).json({ error: 'Invalid master token' });
+    }
+    masterControlState.demoPaused = false;
+    masterControlState.pauseTime = null;
+    broadcast('master-resume', { timestamp: new Date().toISOString() });
+    res.json({ ok: true, action: 'resume' });
+});
+
+/**
+ * POST /api/master-control/next-phase
+ * Master advances demo to next phase for all viewers.
+ */
+app.post('/api/master-control/next-phase', (req, res) => {
+    const token = req.headers['x-master-token'] || (req.body && req.body.token);
+    if (process.env.MASTER_TOKEN && token !== process.env.MASTER_TOKEN) {
+        return res.status(403).json({ error: 'Invalid master token' });
+    }
+    broadcast('master-next-phase', { timestamp: new Date().toISOString() });
+    res.json({ ok: true, action: 'next-phase' });
+});
+
+/**
+ * POST /api/master-control/stop
+ * Master stops demo for all viewers.
+ */
+app.post('/api/master-control/stop', (req, res) => {
+    const token = req.headers['x-master-token'] || (req.body && req.body.token);
+    if (process.env.MASTER_TOKEN && token !== process.env.MASTER_TOKEN) {
+        return res.status(403).json({ error: 'Invalid master token' });
+    }
+    masterControlState.demoActive = false;
+    masterControlState.demoPaused = false;
+    masterControlState.currentPhase = null;
+    masterControlState.demoStartTime = null;
+    masterControlState.pauseTime = null;
+    broadcast('master-stop', { timestamp: new Date().toISOString() });
+    res.json({ ok: true, action: 'stop' });
+});
+
+/**
+ * POST /api/master-control/reset
+ * Master resets demo for all viewers.
+ */
+app.post('/api/master-control/reset', (req, res) => {
+    const token = req.headers['x-master-token'] || (req.body && req.body.token);
+    if (process.env.MASTER_TOKEN && token !== process.env.MASTER_TOKEN) {
+        return res.status(403).json({ error: 'Invalid master token' });
+    }
+    masterControlState.demoActive = false;
+    masterControlState.demoPaused = false;
+    masterControlState.currentPhase = null;
+    masterControlState.demoStartTime = null;
+    masterControlState.pauseTime = null;
+    broadcast('master-reset', { timestamp: new Date().toISOString() });
+    res.json({ ok: true, action: 'reset' });
 });
 
 // ----------------------------------------------------------------
