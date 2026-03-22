@@ -113,6 +113,29 @@
             </div>
         </section>
 
+        <!-- Master Control -->
+        <section class="master-control-section">
+            <button id="master-mode-toggle" class="master-mode-toggle-btn">🎮 Enable Master Control</button>
+
+            <div id="master-panel" class="master-panel hidden">
+                <div class="master-indicator">
+                    <span class="master-badge">🎮 MASTER MODE ACTIVE</span>
+                    <span id="viewer-count" class="viewer-count">0 viewers connected</span>
+                </div>
+                <div class="master-controls">
+                    <button id="master-play-btn" class="master-btn">▶️ Start for All</button>
+                    <button id="master-pause-btn" class="master-btn">⏸️ Pause for All</button>
+                    <button id="master-next-btn" class="master-btn">⏭️ Next Phase for All</button>
+                    <button id="master-stop-btn" class="master-btn">⏹️ Stop for All</button>
+                    <button id="master-reset-btn" class="master-btn">🔄 Reset for All</button>
+                </div>
+            </div>
+
+            <div id="viewer-mode-indicator" class="viewer-mode-indicator hidden">
+                <span class="viewer-badge">👁️ VIEWER MODE — Following presenter</span>
+            </div>
+        </section>
+
         <!-- Shared SVG gradient definitions for circular gauges -->
         <svg width="0" height="0" style="position:absolute">
             <defs>

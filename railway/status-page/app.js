@@ -146,6 +146,62 @@ function connectSSE() {
         }
     });
 
+    // Named event: viewer count update
+    eventSource.addEventListener('viewer-count', (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            updateViewerCount(data.count);
+        } catch (err) {
+            console.warn('Failed to parse viewer-count event:', err);
+        }
+    });
+
+    // Master control events — received by all viewers (non-master clients)
+    eventSource.addEventListener('master-play', () => {
+        if (!isMasterMode) {
+            showViewerModeIndicator(true);
+            startDemo();
+            addTimelineEvent('info', '🎮 Master started demo');
+        }
+    });
+
+    eventSource.addEventListener('master-pause', () => {
+        if (!isMasterMode && !demoPaused) {
+            togglePauseDemo();
+            addTimelineEvent('info', '🎮 Master paused demo');
+        }
+    });
+
+    eventSource.addEventListener('master-resume', () => {
+        if (!isMasterMode && demoPaused) {
+            togglePauseDemo();
+            addTimelineEvent('info', '🎮 Master resumed demo');
+        }
+    });
+
+    eventSource.addEventListener('master-next-phase', () => {
+        if (!isMasterMode) {
+            nextPhaseDemo();
+            addTimelineEvent('info', '🎮 Master advanced to next phase');
+        }
+    });
+
+    eventSource.addEventListener('master-stop', () => {
+        if (!isMasterMode) {
+            stopDemo();
+            showViewerModeIndicator(false);
+            addTimelineEvent('info', '🎮 Master stopped demo');
+        }
+    });
+
+    eventSource.addEventListener('master-reset', () => {
+        if (!isMasterMode) {
+            resetDemo();
+            showViewerModeIndicator(false);
+            addTimelineEvent('info', '🎮 Master reset demo');
+        }
+    });
+
     eventSource.addEventListener('error', () => {
         setConnectionStatus('disconnected');
         eventSource.close();
@@ -495,6 +551,110 @@ function escapeHtml(str) {
 }
 
 // ================================================================
+// Master Control
+// ================================================================
+
+let isMasterMode = false;
+
+function showViewerModeIndicator(visible) {
+    const indicator = $('viewer-mode-indicator');
+    if (indicator) indicator.classList.toggle('hidden', !visible);
+}
+
+function updateViewerCount(count) {
+    const el = $('viewer-count');
+    if (el) el.textContent = `${count} viewer${count !== 1 ? 's' : ''} connected`;
+}
+
+function masterControlFetch(action) {
+    const token = sessionStorage.getItem('masterToken') || '';
+    return fetch(`${API_BASE}/api/master-control/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-master-token': token },
+        body: JSON.stringify({ token }),
+    }).then(res => {
+        if (!res.ok) return res.json().then(d => { throw new Error(d.error || res.statusText); });
+        return res.json();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = $('master-mode-toggle');
+    const masterPanel = $('master-panel');
+    const viewerIndicator = $('viewer-mode-indicator');
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            if (!isMasterMode) {
+                // Prompt for token only if server requires one
+                const token = prompt('Enter Master Control token (leave blank if not required):');
+                if (token === null) return; // cancelled
+                sessionStorage.setItem('masterToken', token || '');
+            }
+
+            isMasterMode = !isMasterMode;
+            toggleBtn.textContent = isMasterMode ? '🎮 Disable Master Control' : '🎮 Enable Master Control';
+            toggleBtn.classList.toggle('active', isMasterMode);
+            if (masterPanel) masterPanel.classList.toggle('hidden', !isMasterMode);
+            if (viewerIndicator) viewerIndicator.classList.add('hidden');
+
+            addTimelineEvent('info', isMasterMode ? '🎮 Master control enabled' : '🎮 Master control disabled');
+        });
+    }
+
+    const masterPlayBtn  = $('master-play-btn');
+    const masterPauseBtn = $('master-pause-btn');
+    const masterNextBtn  = $('master-next-btn');
+    const masterStopBtn  = $('master-stop-btn');
+    const masterResetBtn = $('master-reset-btn');
+
+    if (masterPlayBtn) {
+        masterPlayBtn.addEventListener('click', () => {
+            masterControlFetch('play')
+                .then(() => { startDemo(); addTimelineEvent('info', '🎮 Master: started demo for all'); })
+                .catch(err => { showToast(`❌ ${err.message}`, 'danger'); });
+        });
+    }
+
+    if (masterPauseBtn) {
+        masterPauseBtn.addEventListener('click', () => {
+            const action = demoPaused ? 'resume' : 'pause';
+            masterControlFetch(action)
+                .then(() => {
+                    togglePauseDemo();
+                    masterPauseBtn.textContent = demoPaused ? '▶️ Resume for All' : '⏸️ Pause for All';
+                    addTimelineEvent('info', `🎮 Master: ${action}d demo for all`);
+                })
+                .catch(err => { showToast(`❌ ${err.message}`, 'danger'); });
+        });
+    }
+
+    if (masterNextBtn) {
+        masterNextBtn.addEventListener('click', () => {
+            masterControlFetch('next-phase')
+                .then(() => { nextPhaseDemo(); addTimelineEvent('info', '🎮 Master: next phase for all'); })
+                .catch(err => { showToast(`❌ ${err.message}`, 'danger'); });
+        });
+    }
+
+    if (masterStopBtn) {
+        masterStopBtn.addEventListener('click', () => {
+            masterControlFetch('stop')
+                .then(() => { stopDemo(); addTimelineEvent('info', '🎮 Master: stopped demo for all'); })
+                .catch(err => { showToast(`❌ ${err.message}`, 'danger'); });
+        });
+    }
+
+    if (masterResetBtn) {
+        masterResetBtn.addEventListener('click', () => {
+            masterControlFetch('reset')
+                .then(() => { resetDemo(); addTimelineEvent('info', '🎮 Master: reset demo for all'); })
+                .catch(err => { showToast(`❌ ${err.message}`, 'danger'); });
+        });
+    }
+});
+
+// ================================================================
 // Auto Demo Mode
 // ================================================================
 
@@ -627,6 +787,8 @@ function stopDemo() {
     if (progressBar) progressBar.style.width = '0%';
     if (pauseBtn)    pauseBtn.textContent = '⏸️ Pause';
 
+    if (typeof narrationManager !== 'undefined') narrationManager.stop();
+
     addTimelineEvent('info', '⏹️ Demo stopped');
 }
 
@@ -638,11 +800,13 @@ function togglePauseDemo() {
         demoStartTime += pauseDuration;
         demoPaused = false;
         if (pauseBtn) pauseBtn.textContent = '⏸️ Pause';
+        if (typeof narrationManager !== 'undefined') narrationManager.resume();
         addTimelineEvent('info', '▶️ Demo resumed');
     } else {
         demoPaused = true;
         demoPauseTime = Date.now();
         if (pauseBtn) pauseBtn.textContent = '▶️ Resume';
+        if (typeof narrationManager !== 'undefined') narrationManager.pause();
         addTimelineEvent('info', '⏸️ Demo paused');
     }
 }
