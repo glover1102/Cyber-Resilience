@@ -222,8 +222,7 @@ function t(key) {
 function tViewerCount(count) {
     if (currentLang === 'es') {
         const noun = count !== 1 ? 'espectadores' : 'espectador';
-        const suffix = count !== 1 ? 's' : '';
-        return `${count} ${noun} conectado${suffix}`;
+        return `${count} ${noun} ${count !== 1 ? 'conectados' : 'conectado'}`;
     }
     return `${count} viewer${count !== 1 ? 's' : ''} connected`;
 }
