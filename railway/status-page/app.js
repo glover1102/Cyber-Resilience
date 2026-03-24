@@ -55,6 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Language selector
+    const langSelector = $('lang-selector');
+    if (langSelector) {
+        const savedLang = localStorage.getItem('narration-lang') || 'en';
+        langSelector.value = savedLang;
+        narrationManager.setLanguage(savedLang);
+
+        langSelector.addEventListener('change', () => {
+            const lang = langSelector.value;
+            narrationManager.setLanguage(lang);
+            localStorage.setItem('narration-lang', lang);
+        });
+    }
+
     // Reset button (header)
     const resetBtn = $('reset-btn');
     if (resetBtn) resetBtn.addEventListener('click', resetDemo);

@@ -1229,6 +1229,33 @@ body {
     background: rgba(255, 255, 255, 0.08);
 }
 
+.lang-selector {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-color);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.lang-selector:hover {
+    border-color: var(--accent-blue);
+}
+
+.lang-selector option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .lang-selector {
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
 /* Narration button inside demo controls */
 .narration-demo-btn { color: var(--text-secondary); }
 .narration-demo-btn.active {
