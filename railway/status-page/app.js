@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (narrationBtn) {
         narrationBtn.addEventListener('click', () => {
             const enabled = narrationManager.toggle();
-            narrationBtn.textContent = enabled ? '🎤 ON' : '🎤 OFF';
+            narrationBtn.textContent = t(enabled ? 'narration-btn-on' : 'narration-btn-off');
             narrationBtn.classList.toggle('active', enabled);
             syncNarrationDemoBtn(enabled);
         });
@@ -61,11 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedLang = localStorage.getItem('narration-lang') || 'en';
         langSelector.value = savedLang;
         narrationManager.setLanguage(savedLang);
+        if (savedLang !== 'en') translateUI(savedLang);
 
         langSelector.addEventListener('change', () => {
             const lang = langSelector.value;
             narrationManager.setLanguage(lang);
             localStorage.setItem('narration-lang', lang);
+            translateUI(lang);
         });
     }
 
@@ -528,14 +530,14 @@ function setConnectionStatus(state) {
     switch (state) {
         case 'connected':
             dot.classList.add('connected');
-            text.textContent = 'Live';
+            text.textContent = t('status-live');
             break;
         case 'disconnected':
             dot.classList.add('disconnected');
-            text.textContent = 'Disconnected';
+            text.textContent = t('status-disconnected');
             break;
         default:
-            text.textContent = 'Connecting...';
+            text.textContent = t('status-connecting');
     }
 }
 
@@ -577,7 +579,7 @@ function showViewerModeIndicator(visible) {
 
 function updateViewerCount(count) {
     const el = $('viewer-count');
-    if (el) el.textContent = `${count} viewer${count !== 1 ? 's' : ''} connected`;
+    if (el) el.textContent = tViewerCount(count);
 }
 
 function masterControlFetch(action) {
@@ -607,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             isMasterMode = !isMasterMode;
-            toggleBtn.textContent = isMasterMode ? '🎮 Disable Master Control' : '🎮 Enable Master Control';
+            toggleBtn.textContent = isMasterMode ? t('master-disable') : t('master-enable');
             toggleBtn.classList.toggle('active', isMasterMode);
             if (masterPanel) masterPanel.classList.toggle('hidden', !isMasterMode);
             if (viewerIndicator) viewerIndicator.classList.add('hidden');
@@ -636,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
             masterControlFetch(action)
                 .then(() => {
                     togglePauseDemo();
-                    masterPauseBtn.textContent = demoPaused ? '▶️ Resume for All' : '⏸️ Pause for All';
+                    masterPauseBtn.textContent = demoPaused ? t('master-resume-all') : t('master-pause-all');
                     addTimelineEvent('info', `🎮 Master: ${action}d demo for all`);
                 })
                 .catch(err => { showToast(`❌ ${err.message}`, 'danger'); });
@@ -723,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Keep header button in sync
             const headerBtn = $('narration-toggle-btn');
             if (headerBtn) {
-                headerBtn.textContent = enabled ? '🎤 ON' : '🎤 OFF';
+                headerBtn.textContent = t(enabled ? 'narration-btn-on' : 'narration-btn-off');
                 headerBtn.classList.toggle('active', enabled);
             }
         });
@@ -799,7 +801,7 @@ function stopDemo() {
     if (startBtn)    startBtn.classList.remove('hidden');
     if (progress)    progress.classList.add('hidden');
     if (progressBar) progressBar.style.width = '0%';
-    if (pauseBtn)    pauseBtn.textContent = '⏸️ Pause';
+    if (pauseBtn)    pauseBtn.textContent = t('pause-demo');
 
     if (typeof narrationManager !== 'undefined') narrationManager.stop();
 
@@ -813,13 +815,13 @@ function togglePauseDemo() {
         const pauseDuration = Date.now() - demoPauseTime;
         demoStartTime += pauseDuration;
         demoPaused = false;
-        if (pauseBtn) pauseBtn.textContent = '⏸️ Pause';
+        if (pauseBtn) pauseBtn.textContent = t('pause-demo');
         if (typeof narrationManager !== 'undefined') narrationManager.resume();
         addTimelineEvent('info', '▶️ Demo resumed');
     } else {
         demoPaused = true;
         demoPauseTime = Date.now();
-        if (pauseBtn) pauseBtn.textContent = '▶️ Resume';
+        if (pauseBtn) pauseBtn.textContent = t('resume-demo');
         if (typeof narrationManager !== 'undefined') narrationManager.pause();
         addTimelineEvent('info', '⏸️ Demo paused');
     }
@@ -972,6 +974,6 @@ function showToast(message, type = 'info') {
 function syncNarrationDemoBtn(enabled) {
     const btn = $('narration-demo-btn');
     if (!btn) return;
-    btn.textContent = `🎤 Narration: ${enabled ? 'ON' : 'OFF'}`;
+    btn.textContent = t(enabled ? 'narration-demo-on' : 'narration-demo-off');
     btn.classList.toggle('active', enabled);
 }

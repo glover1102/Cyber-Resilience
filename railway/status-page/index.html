@@ -12,8 +12,8 @@
     <div id="alert-banner" class="alert-banner hidden">
         <div class="alert-icon">⚠️</div>
         <div class="alert-text">
-            <strong>RANSOMWARE DETECTED</strong>
-            <span id="alert-message">Malicious activity detected on the network. Incident response initiated.</span>
+            <strong data-i18n="alert-title">RANSOMWARE DETECTED</strong>
+            <span id="alert-message" data-i18n="alert-message-default">Malicious activity detected on the network. Incident response initiated.</span>
         </div>
         <div class="alert-timestamp" id="alert-timestamp"></div>
     </div>
@@ -24,24 +24,24 @@
             <div class="logo">
                 <span class="logo-icon">🛡️</span>
                 <div class="logo-text">
-                    <h1>Cyber Resilience</h1>
-                    <p>Live Demonstration Platform</p>
+                    <h1 data-i18n="header-title">Cyber Resilience</h1>
+                    <p data-i18n="header-subtitle">Live Demonstration Platform</p>
                 </div>
             </div>
             <div class="header-status">
-                <button id="reset-btn" class="reset-btn" title="Reset all systems to operational baseline">🔄 RESET</button>
-                <button id="narration-toggle-btn" class="narration-btn" title="Toggle voice narration">🎤 OFF</button>
-                <select id="lang-selector" class="lang-selector" title="Narration language">
+                <button id="reset-btn" class="reset-btn" title="Reset all systems to operational baseline" data-i18n="reset-btn">🔄 RESET</button>
+                <button id="narration-toggle-btn" class="narration-btn" title="Toggle voice narration" data-i18n="narration-btn-off">🎤 OFF</button>
+                <select id="lang-selector" class="lang-selector" data-i18n-title="lang-selector-title" title="Narration language">
                     <option value="en">English 🇺🇸</option>
                     <option value="es">Español 🇪🇸</option>
                 </select>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme">🌙</button>
+                <button id="theme-toggle" class="theme-toggle" data-i18n-title="theme-toggle-title" title="Toggle light/dark theme">🌙</button>
                 <div class="connection-status" id="connection-status">
                     <span class="status-dot" id="connection-dot"></span>
-                    <span id="connection-text">Connecting...</span>
+                    <span id="connection-text" data-i18n="status-connecting">Connecting...</span>
                 </div>
                 <div class="last-updated">
-                    Last updated: <span id="last-updated">--:--:--</span>
+                    <span data-i18n="last-updated-label">Last updated:</span> <span id="last-updated">--:--:--</span>
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@
             <div class="kpi-card">
                 <div class="kpi-icon">🖥️</div>
                 <div class="kpi-body">
-                    <div class="kpi-label">Systems Online</div>
+                    <div class="kpi-label" data-i18n="kpi-systems-online">Systems Online</div>
                     <div class="kpi-value" id="kpi-systems">11/11</div>
                     <div class="kpi-change positive" id="kpi-systems-change">+0%</div>
                 </div>
@@ -63,7 +63,7 @@
             <div class="kpi-card">
                 <div class="kpi-icon">🚨</div>
                 <div class="kpi-body">
-                    <div class="kpi-label">Active Alerts</div>
+                    <div class="kpi-label" data-i18n="kpi-active-alerts">Active Alerts</div>
                     <div class="kpi-value" id="kpi-alerts">0</div>
                     <div class="kpi-change positive" id="kpi-alerts-change">+0</div>
                 </div>
@@ -71,7 +71,7 @@
             <div class="kpi-card">
                 <div class="kpi-icon">🌐</div>
                 <div class="kpi-body">
-                    <div class="kpi-label">Network Traffic</div>
+                    <div class="kpi-label" data-i18n="kpi-network-traffic">Network Traffic</div>
                     <div class="kpi-value" id="kpi-network">2.4 GB/s</div>
                     <div class="kpi-change positive" id="kpi-network-change">+0.2%</div>
                 </div>
@@ -79,7 +79,7 @@
             <div class="kpi-card">
                 <div class="kpi-icon">💾</div>
                 <div class="kpi-body">
-                    <div class="kpi-label">Backup Status</div>
+                    <div class="kpi-label" data-i18n="kpi-backup-status">Backup Status</div>
                     <div class="kpi-value" id="kpi-backup">100%</div>
                     <div class="kpi-change positive" id="kpi-backup-change">+0.4%</div>
                 </div>
@@ -90,13 +90,13 @@
         <section class="demo-control">
             <div class="demo-mode-selector">
                 <label>
-                    <input type="radio" name="demo-mode" value="normal" checked> Normal (45s)
+                    <input type="radio" name="demo-mode" value="normal" checked><span data-i18n="demo-mode-normal"> Normal (45s)</span>
                 </label>
                 <label>
-                    <input type="radio" name="demo-mode" value="dramatic"> Dramatic (2min)
+                    <input type="radio" name="demo-mode" value="dramatic"><span data-i18n="demo-mode-dramatic"> Dramatic (2min)</span>
                 </label>
             </div>
-            <button id="start-demo-btn" class="demo-button">
+            <button id="start-demo-btn" class="demo-button" data-i18n="start-demo">
                 🎬 START DEMO
             </button>
             <div id="demo-progress" class="demo-progress hidden">
@@ -104,39 +104,39 @@
                     <div class="progress-bar" id="demo-progress-bar"></div>
                 </div>
                 <div class="demo-status">
-                    <span id="demo-phase">Initializing...</span>
+                    <span id="demo-phase" data-i18n="demo-initializing">Initializing...</span>
                     <span id="demo-timer">0:00</span>
                 </div>
                 <div class="demo-controls">
-                    <button id="pause-demo-btn" class="demo-control-btn">⏸️ Pause</button>
-                    <button id="next-phase-btn" class="demo-control-btn">⏭️ Next</button>
-                    <button id="stop-demo-btn" class="demo-control-btn">⏹️ Stop</button>
-                    <button id="narration-demo-btn" class="demo-control-btn narration-demo-btn">🎤 Narration: OFF</button>
-                    <button id="reset-demo-btn" class="demo-control-btn reset-demo-btn">🔄 Reset</button>
+                    <button id="pause-demo-btn" class="demo-control-btn" data-i18n="pause-demo">⏸️ Pause</button>
+                    <button id="next-phase-btn" class="demo-control-btn" data-i18n="next-phase">⏭️ Next</button>
+                    <button id="stop-demo-btn" class="demo-control-btn" data-i18n="stop-demo">⏹️ Stop</button>
+                    <button id="narration-demo-btn" class="demo-control-btn narration-demo-btn" data-i18n="narration-demo-off">🎤 Narration: OFF</button>
+                    <button id="reset-demo-btn" class="demo-control-btn reset-demo-btn" data-i18n="reset-demo">🔄 Reset</button>
                 </div>
             </div>
         </section>
 
         <!-- Master Control -->
         <section class="master-control-section">
-            <button id="master-mode-toggle" class="master-mode-toggle-btn">🎮 Enable Master Control</button>
+            <button id="master-mode-toggle" class="master-mode-toggle-btn" data-i18n="master-enable">🎮 Enable Master Control</button>
 
             <div id="master-panel" class="master-panel hidden">
                 <div class="master-indicator">
-                    <span class="master-badge">🎮 MASTER MODE ACTIVE</span>
+                    <span class="master-badge" data-i18n="master-mode-active">🎮 MASTER MODE ACTIVE</span>
                     <span id="viewer-count" class="viewer-count">0 viewers connected</span>
                 </div>
                 <div class="master-controls">
-                    <button id="master-play-btn" class="master-btn">▶️ Start for All</button>
-                    <button id="master-pause-btn" class="master-btn">⏸️ Pause for All</button>
-                    <button id="master-next-btn" class="master-btn">⏭️ Next Phase for All</button>
-                    <button id="master-stop-btn" class="master-btn">⏹️ Stop for All</button>
-                    <button id="master-reset-btn" class="master-btn">🔄 Reset for All</button>
+                    <button id="master-play-btn" class="master-btn" data-i18n="master-start-all">▶️ Start for All</button>
+                    <button id="master-pause-btn" class="master-btn" data-i18n="master-pause-all">⏸️ Pause for All</button>
+                    <button id="master-next-btn" class="master-btn" data-i18n="master-next-all">⏭️ Next Phase for All</button>
+                    <button id="master-stop-btn" class="master-btn" data-i18n="master-stop-all">⏹️ Stop for All</button>
+                    <button id="master-reset-btn" class="master-btn" data-i18n="master-reset-all">🔄 Reset for All</button>
                 </div>
             </div>
 
             <div id="viewer-mode-indicator" class="viewer-mode-indicator hidden">
-                <span class="viewer-badge">👁️ VIEWER MODE — Following presenter</span>
+                <span class="viewer-badge" data-i18n="viewer-mode">👁️ VIEWER MODE — Following presenter</span>
             </div>
         </section>
 
@@ -168,14 +168,14 @@
 
             <!-- Left: Critical Systems (5 systems) -->
             <section class="critical-systems">
-                <h2 class="section-title">⚡ Critical Systems</h2>
+                <h2 class="section-title" data-i18n="section-critical">⚡ Critical Systems</h2>
                 <div class="cards-container critical">
 
                     <!-- Primary DC -->
                     <div class="status-card critical-card" id="card-primary-dc">
                         <div class="card-header">
                             <div class="card-icon">🏢</div>
-                            <div class="card-title">Primary DC</div>
+                            <div class="card-title" data-i18n="card-primary-dc-title">Primary DC</div>
                             <div class="card-status-badge online" id="badge-primary-dc">ONLINE</div>
                         </div>
                         <div class="card-metrics gauges">
@@ -190,8 +190,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-cpu-primary-dc">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -206,8 +206,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-mem-primary-dc">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -222,14 +222,14 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-net-primary-dc">0 MB/s</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
-                            <span class="card-role">Primary Domain Controller</span>
+                            <span class="card-role" data-i18n="card-primary-dc-role">Primary Domain Controller</span>
                             <span class="card-pulse" id="pulse-primary-dc">●</span>
                         </div>
                     </div>
@@ -238,7 +238,7 @@
                     <div class="status-card critical-card" id="card-firewall">
                         <div class="card-header">
                             <div class="card-icon">🔐</div>
-                            <div class="card-title">Firewall</div>
+                            <div class="card-title" data-i18n="card-firewall-title">Firewall</div>
                             <div class="card-status-badge online" id="badge-firewall">ONLINE</div>
                         </div>
                         <div class="card-metrics gauges">
@@ -253,8 +253,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-cpu-firewall">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -269,8 +269,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-mem-firewall">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -285,14 +285,14 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-net-firewall">0 pkts/s</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
-                            <span class="card-role">Network Firewall</span>
+                            <span class="card-role" data-i18n="card-firewall-role">Network Firewall</span>
                             <span class="card-pulse" id="pulse-firewall">●</span>
                         </div>
                     </div>
@@ -301,7 +301,7 @@
                     <div class="status-card critical-card" id="card-database">
                         <div class="card-header">
                             <div class="card-icon">💾</div>
-                            <div class="card-title">Database</div>
+                            <div class="card-title" data-i18n="card-database-title">Database</div>
                             <div class="card-status-badge online" id="badge-database">ONLINE</div>
                         </div>
                         <div class="card-metrics gauges">
@@ -316,8 +316,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-cpu-database">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -332,8 +332,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-mem-database">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -348,14 +348,14 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-net-database">0 q/s</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
-                            <span class="card-role">Database Server</span>
+                            <span class="card-role" data-i18n="card-database-role">Database Server</span>
                             <span class="card-pulse" id="pulse-database">●</span>
                         </div>
                     </div>
@@ -364,7 +364,7 @@
                     <div class="status-card critical-card" id="card-edr">
                         <div class="card-header">
                             <div class="card-icon">🛡️</div>
-                            <div class="card-title">EDR/AV</div>
+                            <div class="card-title" data-i18n="card-edr-title">EDR/AV</div>
                             <div class="card-status-badge online" id="badge-edr">ONLINE</div>
                         </div>
                         <div class="card-metrics gauges">
@@ -379,8 +379,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-cpu-edr">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -395,8 +395,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-mem-edr">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -411,14 +411,14 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-net-edr">0 scans</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
-                            <span class="card-role">Endpoint Detection &amp; Response</span>
+                            <span class="card-role" data-i18n="card-edr-role">Endpoint Detection &amp; Response</span>
                             <span class="card-pulse" id="pulse-edr">●</span>
                         </div>
                     </div>
@@ -427,7 +427,7 @@
                     <div class="status-card critical-card" id="card-application">
                         <div class="card-header">
                             <div class="card-icon">⚙️</div>
-                            <div class="card-title">Application</div>
+                            <div class="card-title" data-i18n="card-application-title">Application</div>
                             <div class="card-status-badge online" id="badge-application">ONLINE</div>
                         </div>
                         <div class="card-metrics gauges">
@@ -442,8 +442,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-cpu-application">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -458,8 +458,8 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-mem-application">0%</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
@@ -474,14 +474,14 @@
                                     </svg>
                                     <div class="gauge-value" id="gauge-value-net-application">0</div>
                                     <div class="gauge-labels">
-                                        <span class="gauge-label-low">Low</span>
-                                        <span class="gauge-label-high">High</span>
+                                        <span class="gauge-label-low" data-i18n="gauge-low">Low</span>
+                                        <span class="gauge-label-high" data-i18n="gauge-high">High</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer">
-                            <span class="card-role">Application Server</span>
+                            <span class="card-role" data-i18n="card-application-role">Application Server</span>
                             <span class="card-pulse" id="pulse-application">●</span>
                         </div>
                     </div>
@@ -491,18 +491,18 @@
 
             <!-- Right: Timeline Chart -->
             <section class="chart-section">
-                <h2 class="section-title">📈 Real-time Metrics</h2>
+                <h2 class="section-title" data-i18n="section-metrics">📈 Real-time Metrics</h2>
                 <div class="chart-container">
                     <canvas id="timeline-canvas"></canvas>
                 </div>
                 <!-- Event Timeline below chart -->
-                <h2 class="section-title" style="margin-top:1.5rem">📋 Event Timeline</h2>
+                <h2 class="section-title" style="margin-top:1.5rem" data-i18n="section-timeline">📋 Event Timeline</h2>
                 <div class="timeline" id="timeline">
                     <div class="timeline-item info">
                         <div class="timeline-dot"></div>
                         <div class="timeline-content">
                             <span class="timeline-time" id="start-time">--:--:--</span>
-                            <span class="timeline-desc">Dashboard initialised — awaiting metrics</span>
+                            <span class="timeline-desc" data-i18n="dashboard-initialised">Dashboard initialised — awaiting metrics</span>
                         </div>
                     </div>
                 </div>
@@ -513,60 +513,60 @@
         <!-- Collapsible Supporting Systems Table -->
         <section class="supporting-systems">
             <div class="collapsible-header" id="supporting-toggle" role="button" tabindex="0" aria-expanded="false">
-                <h2 class="section-title">🗄️ Supporting Systems
+                <h2 class="section-title"><span data-i18n="section-supporting">🗄️ Supporting Systems</span>
                     <span class="toggle-icon">▶</span>
                 </h2>
-                <span class="collapsible-hint">Click to expand / collapse (6 systems)</span>
+                <span class="collapsible-hint" data-i18n="supporting-hint">Click to expand / collapse (6 systems)</span>
             </div>
             <div class="collapsible-body hidden" id="supporting-body">
                 <table class="systems-table">
                     <thead>
                         <tr>
-                            <th>System</th>
-                            <th>Status</th>
-                            <th>CPU</th>
-                            <th>Memory</th>
-                            <th>Network</th>
+                            <th data-i18n="tbl-system">System</th>
+                            <th data-i18n="tbl-status">Status</th>
+                            <th data-i18n="tbl-cpu">CPU</th>
+                            <th data-i18n="tbl-memory">Memory</th>
+                            <th data-i18n="tbl-network">Network</th>
                         </tr>
                     </thead>
                     <tbody id="supporting-table-body">
                         <tr id="row-secondary-dc">
-                            <td><span class="tbl-icon">🏗️</span> Secondary DC</td>
+                            <td><span class="tbl-icon">🏗️</span> <span data-i18n="tbl-secondary-dc">Secondary DC</span></td>
                             <td><span class="tbl-badge online" id="tbl-badge-secondary-dc">ONLINE</span></td>
                             <td id="tbl-cpu-secondary-dc">—</td>
                             <td id="tbl-mem-secondary-dc">—</td>
                             <td id="tbl-net-secondary-dc">—</td>
                         </tr>
                         <tr id="row-soc">
-                            <td><span class="tbl-icon">🔍</span> SOC</td>
+                            <td><span class="tbl-icon">🔍</span> <span data-i18n="tbl-soc">SOC</span></td>
                             <td><span class="tbl-badge online" id="tbl-badge-soc">ONLINE</span></td>
                             <td id="tbl-cpu-soc">—</td>
                             <td id="tbl-mem-soc">—</td>
                             <td id="tbl-net-soc">—</td>
                         </tr>
                         <tr id="row-noc">
-                            <td><span class="tbl-icon">📡</span> NOC</td>
+                            <td><span class="tbl-icon">📡</span> <span data-i18n="tbl-noc">NOC</span></td>
                             <td><span class="tbl-badge online" id="tbl-badge-noc">ONLINE</span></td>
                             <td id="tbl-cpu-noc">—</td>
                             <td id="tbl-mem-noc">—</td>
                             <td id="tbl-net-noc">—</td>
                         </tr>
                         <tr id="row-backup">
-                            <td><span class="tbl-icon">💿</span> Backup</td>
+                            <td><span class="tbl-icon">💿</span> <span data-i18n="tbl-backup">Backup</span></td>
                             <td><span class="tbl-badge online" id="tbl-badge-backup">ONLINE</span></td>
                             <td id="tbl-cpu-backup">—</td>
                             <td id="tbl-mem-backup">—</td>
                             <td id="tbl-net-backup">—</td>
                         </tr>
                         <tr id="row-vpn">
-                            <td><span class="tbl-icon">🌐</span> VPN</td>
+                            <td><span class="tbl-icon">🌐</span> <span data-i18n="tbl-vpn">VPN</span></td>
                             <td><span class="tbl-badge online" id="tbl-badge-vpn">ONLINE</span></td>
                             <td id="tbl-cpu-vpn">—</td>
                             <td id="tbl-mem-vpn">—</td>
                             <td id="tbl-net-vpn">—</td>
                         </tr>
                         <tr id="row-email">
-                            <td><span class="tbl-icon">📧</span> Email</td>
+                            <td><span class="tbl-icon">📧</span> <span data-i18n="tbl-email">Email</span></td>
                             <td><span class="tbl-badge online" id="tbl-badge-email">ONLINE</span></td>
                             <td id="tbl-cpu-email">—</td>
                             <td id="tbl-mem-email">—</td>
@@ -624,8 +624,8 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>🛡️ Cyber Resilience Demo Platform &nbsp;|&nbsp; For educational purposes only</p>
-        <p>MITRE ATT&amp;CK® Framework Reference &nbsp;|&nbsp; 3-2-1-1-0 Backup Strategy</p>
+        <p data-i18n="footer-line1">🛡️ Cyber Resilience Demo Platform  |  For educational purposes only</p>
+        <p data-i18n="footer-line2">MITRE ATT&amp;CK® Framework Reference  |  3-2-1-1-0 Backup Strategy</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -633,6 +633,7 @@
     <script src="confetti.js"></script>
     <script src="narration.js"></script>
     <script src="timeline-chart.js"></script>
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
