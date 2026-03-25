@@ -19,7 +19,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +73,30 @@ const sseClients = new Set();
 /** Connected device info — keyed by a unique client ID */
 const connectedDevices = new Map();
 let nextClientId = 1;
+
+/** Simple in-memory rate limiter for ping requests (per IP, no external deps) */
+const pingRateLimit = new Map(); // callerIp → { count, resetAt }
+const PING_RATE_LIMIT_MAX = 10;  // max pings per window per caller
+const PING_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1-minute window
+
+/**
+ * Express middleware that enforces a per-IP rate limit for the ping endpoint.
+ * Keeps a simple in-memory token-bucket without requiring external packages.
+ */
+function pingRateLimiter(req, res, next) {
+    const callerIp = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+    const now = Date.now();
+    const bucket = pingRateLimit.get(callerIp);
+    if (bucket && bucket.resetAt > now) {
+        if (bucket.count >= PING_RATE_LIMIT_MAX) {
+            return res.status(429).json({ error: 'Too many ping requests — please wait before trying again.' });
+        }
+        bucket.count += 1;
+    } else {
+        pingRateLimit.set(callerIp, { count: 1, resetAt: now + PING_RATE_LIMIT_WINDOW_MS });
+    }
+    next();
+}
 
 // ----------------------------------------------------------------
 // SSE Helpers
@@ -444,16 +468,18 @@ app.post('/api/register-device', (req, res) => {
 
 /**
  * POST /api/ping/:ip
- * Pings a device IP from the server using child_process.exec.
+ * Pings a device IP from the server using child_process.execFile.
  */
-app.post('/api/ping/:ip', (req, res) => {
+app.post('/api/ping/:ip', pingRateLimiter, (req, res) => {
     const ip = req.params.ip;
-    // Validate IP format (basic regex for IPv4/IPv6)
-    if (!/^[\d.:a-fA-F]+$/.test(ip)) {
+    // Validate: strict IPv4 or IPv6 — no shell metacharacters allowed
+    const isIPv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+    const isIPv6 = /^[\da-fA-F:]+$/.test(ip) && ip.includes(':');
+    if (!isIPv4 && !isIPv6) {
         return res.status(400).json({ error: 'Invalid IP address' });
     }
-    // Use -c 4 for 4 pings, timeout 5 seconds
-    exec(`ping -c 4 -W 5 ${ip}`, { timeout: 30000 }, (error, stdout, stderr) => {
+    // Use execFile (not exec) so the IP is passed as an argument — no shell injection possible
+    execFile('ping', ['-c', '4', '-W', '5', ip], { timeout: 30000 }, (error, stdout, stderr) => {
         if (error) {
             return res.json({ ok: false, ip, reachable: false, output: stderr || error.message });
         }

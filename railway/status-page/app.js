@@ -1101,14 +1101,20 @@ function updateDevicesPanel(devices, count) {
             <td>${device.browser || 'Unknown'}</td>
             <td>${device.deviceType || 'Unknown'}</td>
             <td><span class="tbl-badge online">Connected</span></td>
-            <td>
-                <button class="ping-btn" onclick="pingDevice('${device.ip}', this)" title="Ping this device">🏓 Ping</button>
-            </td>
+            <td><button class="ping-btn" title="Ping this device">🏓 Ping</button></td>
         `;
 
+        // Wire up the ping button with a programmatic listener (no inline onclick)
+        const pingBtn = tr.querySelector('.ping-btn');
+        if (pingBtn) {
+            pingBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                pingDevice(device.ip, pingBtn);
+            });
+        }
+
         // Click row to expand details
-        tr.addEventListener('click', (e) => {
-            if (e.target.classList.contains('ping-btn')) return;
+        tr.addEventListener('click', () => {
             toggleDeviceDetails(tr, device);
         });
 
