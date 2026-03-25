@@ -14,6 +14,9 @@ let reconnectDelay = 2000;
 const MAX_RECONNECT_DELAY = 30000;
 const MAX_TIMELINE_ITEMS = 50;
 
+/** Client ID assigned by the server for device registration */
+let myClientId = null;
+
 // --- DOM Helpers ---
 const $ = (id) => document.getElementById(id);
 
@@ -87,6 +90,21 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleEl.addEventListener('click', expand);
         toggleEl.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand(); }
+        });
+    }
+
+    // Connected devices collapsible
+    const devicesToggle = $('devices-toggle');
+    const devicesBody = $('devices-body');
+    if (devicesToggle && devicesBody) {
+        const expandDevices = () => {
+            const isExpanded = devicesToggle.getAttribute('aria-expanded') === 'true';
+            devicesToggle.setAttribute('aria-expanded', String(!isExpanded));
+            devicesBody.classList.toggle('hidden', isExpanded);
+        };
+        devicesToggle.addEventListener('click', expandDevices);
+        devicesToggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expandDevices(); }
         });
     }
 
@@ -169,6 +187,27 @@ function connectSSE() {
             updateViewerCount(data.count);
         } catch (err) {
             console.warn('Failed to parse viewer-count event:', err);
+        }
+    });
+
+    // Named event: client ID assigned by server
+    eventSource.addEventListener('client-id', (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            myClientId = data.clientId;
+            registerDeviceInfo(data.clientId);
+        } catch (err) {
+            console.warn('Failed to parse client-id event:', err);
+        }
+    });
+
+    // Named event: connected devices list update
+    eventSource.addEventListener('devices-update', (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            updateDevicesPanel(data.devices, data.count);
+        } catch (err) {
+            console.warn('Failed to parse devices-update event:', err);
         }
     });
 
@@ -976,4 +1015,166 @@ function syncNarrationDemoBtn(enabled) {
     if (!btn) return;
     btn.textContent = t(enabled ? 'narration-demo-on' : 'narration-demo-off');
     btn.classList.toggle('active', enabled);
+}
+
+// ================================================================
+// Connected Devices Panel
+// ================================================================
+
+/**
+ * Collect client-side device info and POST it to the server.
+ * @param {number} clientId - The client ID assigned by the server.
+ */
+function registerDeviceInfo(clientId) {
+    const ua = navigator.userAgent;
+    const info = {
+        clientId,
+        os: detectOS(ua),
+        browser: detectBrowser(ua),
+        deviceType: detectDeviceType(ua),
+        screenResolution: `${window.screen.width}×${window.screen.height}`,
+        language: navigator.language || 'unknown',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown',
+        connectionType: (navigator.connection && navigator.connection.effectiveType) || 'unknown',
+    };
+    fetch(`${API_BASE}/api/register-device`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(info),
+    }).catch(err => console.warn('Failed to register device:', err));
+}
+
+function detectOS(ua) {
+    if (/Windows/.test(ua)) return 'Windows';
+    if (/Mac OS X/.test(ua)) return 'macOS';
+    if (/CrOS/.test(ua)) return 'Chrome OS';
+    if (/Linux/.test(ua)) return 'Linux';
+    if (/Android/.test(ua)) return 'Android';
+    if (/iPhone|iPad|iPod/.test(ua)) return 'iOS';
+    return 'Unknown';
+}
+
+function detectBrowser(ua) {
+    if (/Edg\//.test(ua)) return 'Edge';
+    if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) return 'Chrome';
+    if (/Firefox\//.test(ua)) return 'Firefox';
+    if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return 'Safari';
+    return 'Unknown';
+}
+
+function detectDeviceType(ua) {
+    if (/Mobi|Android.*Mobile|iPhone|iPod/.test(ua)) return 'Mobile';
+    if (/iPad|Android(?!.*Mobile)|Tablet/.test(ua)) return 'Tablet';
+    return 'Desktop';
+}
+
+/**
+ * Update the Connected Devices panel with the latest device list.
+ * @param {Array} devices - Array of device objects.
+ * @param {number} count  - Total connected device count.
+ */
+function updateDevicesPanel(devices, count) {
+    // Update header badge count
+    const badge = $('devices-count-badge');
+    if (badge) badge.textContent = count;
+
+    // Update the KPI card
+    const kpiDevices = $('kpi-devices');
+    if (kpiDevices) kpiDevices.textContent = count;
+
+    // Update the table body
+    const tbody = $('devices-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    devices.forEach(device => {
+        const tr = document.createElement('tr');
+        tr.className = 'device-row';
+        tr.dataset.clientId = device.id;
+
+        const deviceIcon = device.deviceType === 'Mobile' ? '📱' :
+                          device.deviceType === 'Tablet' ? '📱' : '🖥️';
+
+        tr.innerHTML = `
+            <td>${deviceIcon} ${device.os || 'Unknown'}</td>
+            <td>${device.ip || 'Unknown'}</td>
+            <td>${device.browser || 'Unknown'}</td>
+            <td>${device.deviceType || 'Unknown'}</td>
+            <td><span class="tbl-badge online">Connected</span></td>
+            <td>
+                <button class="ping-btn" onclick="pingDevice('${device.ip}', this)" title="Ping this device">🏓 Ping</button>
+            </td>
+        `;
+
+        // Click row to expand details
+        tr.addEventListener('click', (e) => {
+            if (e.target.classList.contains('ping-btn')) return;
+            toggleDeviceDetails(tr, device);
+        });
+
+        tbody.appendChild(tr);
+    });
+}
+
+/**
+ * Toggle an expanded detail row for a device.
+ * @param {HTMLTableRowElement} row    - The device row element.
+ * @param {object}              device - The device data object.
+ */
+function toggleDeviceDetails(row, device) {
+    const existingDetail = row.nextElementSibling;
+    if (existingDetail && existingDetail.classList.contains('device-detail-row')) {
+        existingDetail.remove();
+        return;
+    }
+
+    const detailRow = document.createElement('tr');
+    detailRow.className = 'device-detail-row';
+    const connectedTime = device.connectedAt ? new Date(device.connectedAt).toLocaleTimeString() : 'Unknown';
+    detailRow.innerHTML = `
+        <td colspan="6">
+            <div class="device-details">
+                <div class="detail-item"><strong>Screen:</strong> ${device.screenResolution || 'Unknown'}</div>
+                <div class="detail-item"><strong>Language:</strong> ${device.language || 'Unknown'}</div>
+                <div class="detail-item"><strong>Timezone:</strong> ${device.timezone || 'Unknown'}</div>
+                <div class="detail-item"><strong>Connection:</strong> ${device.connectionType || 'Unknown'}</div>
+                <div class="detail-item"><strong>Connected Since:</strong> ${connectedTime}</div>
+                <div class="detail-item"><strong>User Agent:</strong> <span class="ua-text">${device.userAgent || 'Unknown'}</span></div>
+            </div>
+        </td>
+    `;
+    row.after(detailRow);
+}
+
+/**
+ * Ping a device IP from the server and show the result.
+ * @param {string}          ip  - IP address to ping.
+ * @param {HTMLButtonElement} btn - The ping button element.
+ */
+function pingDevice(ip, btn) {
+    if (!ip || ip === 'Unknown') {
+        showToast('Cannot ping: IP unknown', 'warning');
+        return;
+    }
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Pinging...';
+    btn.disabled = true;
+
+    fetch(`${API_BASE}/api/ping/${encodeURIComponent(ip)}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.reachable) {
+                btn.textContent = `✅ ${data.avgLatency}`;
+                showToast(`Ping ${ip}: ${data.avgLatency} (${data.packetLoss} loss)`, 'success');
+            } else {
+                btn.textContent = '❌ Unreachable';
+                showToast(`Ping ${ip}: Unreachable`, 'danger');
+            }
+            setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 5000);
+        })
+        .catch(err => {
+            btn.textContent = '❌ Error';
+            showToast(`Ping failed: ${err.message}`, 'danger');
+            setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 3000);
+        });
 }

@@ -84,6 +84,14 @@
                     <div class="kpi-change positive" id="kpi-backup-change">+0.4%</div>
                 </div>
             </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">👥</div>
+                <div class="kpi-body">
+                    <div class="kpi-label" data-i18n="kpi-devices">Connected Users</div>
+                    <div class="kpi-value" id="kpi-devices">0</div>
+                    <div class="kpi-change positive" id="kpi-devices-change">Live</div>
+                </div>
+            </div>
         </section>
 
         <!-- Demo Controls -->
@@ -572,6 +580,33 @@
                             <td id="tbl-mem-email">—</td>
                             <td id="tbl-net-email">—</td>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Connected Devices (collapsible) -->
+        <section class="connected-devices-section">
+            <div class="collapsible-header" id="devices-toggle" role="button" tabindex="0" aria-expanded="false">
+                <h2 class="section-title" data-i18n="section-devices">👥 Connected Devices
+                    <span class="toggle-icon">▶</span>
+                </h2>
+                <span class="collapsible-hint"><span id="devices-count-badge">0</span> <span data-i18n="devices-connected">devices connected</span></span>
+            </div>
+            <div class="collapsible-body hidden" id="devices-body">
+                <table class="systems-table devices-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="th-device">Device</th>
+                            <th data-i18n="th-ip">IP Address</th>
+                            <th data-i18n="th-browser">Browser</th>
+                            <th data-i18n="th-type">Type</th>
+                            <th data-i18n="th-status-col">Status</th>
+                            <th data-i18n="th-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devices-table-body">
+                        <!-- Populated dynamically by app.js -->
                     </tbody>
                 </table>
             </div>

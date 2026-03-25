@@ -7,6 +7,9 @@
  *   GET  /api/stream           - Server-Sent Events for real-time updates
  *   POST /api/simulate-attack  - Trigger a demo attack simulation
  *   GET  /health               - Health check
+ *   GET  /api/devices          - List connected devices
+ *   POST /api/register-device  - Merge client-side device info
+ *   POST /api/ping/:ip         - Ping a device IP from the server
  *
  * Serves the static status-page dashboard from ../status-page/
  */
@@ -16,6 +19,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +70,10 @@ let masterControlState = {
 /** Registered SSE clients */
 const sseClients = new Set();
 
+/** Connected device info — keyed by a unique client ID */
+const connectedDevices = new Map();
+let nextClientId = 1;
+
 // ----------------------------------------------------------------
 // SSE Helpers
 // ----------------------------------------------------------------
@@ -96,6 +104,14 @@ function broadcastStatus(eventOverride) {
     };
     if (eventOverride) payload.event = eventOverride;
     broadcast('status', payload);
+}
+
+/** Broadcast the current connected device list to all clients */
+function broadcastDevices() {
+    broadcast('devices-update', {
+        devices: Array.from(connectedDevices.values()),
+        count: connectedDevices.size,
+    });
 }
 
 // ----------------------------------------------------------------
@@ -160,6 +176,18 @@ app.get('/api/stream', (req, res) => {
     res.setHeader('X-Accel-Buffering', 'no'); // disable Nginx buffering if present
     res.flushHeaders();
 
+    // Assign a unique client ID and record device info
+    const clientId = nextClientId++;
+    res.clientId = clientId;
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'] || '';
+    connectedDevices.set(clientId, {
+        id: clientId,
+        ip,
+        userAgent,
+        connectedAt: new Date().toISOString(),
+    });
+
     // Send current state immediately on connect
     const initial = JSON.stringify({
         systems: systemStatus,
@@ -170,8 +198,12 @@ app.get('/api/stream', (req, res) => {
     });
     res.write(`event: status\ndata: ${initial}\n\n`);
 
+    // Send the assigned client ID so the browser can register device info
+    res.write(`event: client-id\ndata: ${JSON.stringify({ clientId })}\n\n`);
+
     sseClients.add(res);
     broadcast('viewer-count', { count: sseClients.size });
+    broadcastDevices();
 
     // Keep-alive ping every 25 seconds
     const keepAlive = setInterval(() => {
@@ -186,7 +218,9 @@ app.get('/api/stream', (req, res) => {
     req.on('close', () => {
         clearInterval(keepAlive);
         sseClients.delete(res);
+        connectedDevices.delete(clientId);
         broadcast('viewer-count', { count: sseClients.size });
+        broadcastDevices();
     });
 });
 
@@ -377,6 +411,66 @@ app.post('/api/master-control/reset', (req, res) => {
     masterControlState.pauseTime = null;
     broadcast('master-reset', { timestamp: new Date().toISOString() });
     res.json({ ok: true, action: 'reset' });
+});
+
+// ----------------------------------------------------------------
+// Connected Devices Routes
+// ----------------------------------------------------------------
+
+/**
+ * GET /api/devices
+ * Returns the current list of connected devices.
+ */
+app.get('/api/devices', (_req, res) => {
+    res.json({ devices: Array.from(connectedDevices.values()), count: connectedDevices.size });
+});
+
+/**
+ * POST /api/register-device
+ * Accepts client-side device info and merges it with server-side data.
+ *
+ * Body: { clientId, os, browser, deviceType, screenResolution, language, timezone, connectionType }
+ */
+app.post('/api/register-device', (req, res) => {
+    const { clientId, ...info } = req.body || {};
+    if (!clientId || !connectedDevices.has(clientId)) {
+        return res.status(404).json({ error: 'Device not found' });
+    }
+    const existing = connectedDevices.get(clientId);
+    connectedDevices.set(clientId, { ...existing, ...info });
+    broadcastDevices();
+    res.json({ ok: true });
+});
+
+/**
+ * POST /api/ping/:ip
+ * Pings a device IP from the server using child_process.exec.
+ */
+app.post('/api/ping/:ip', (req, res) => {
+    const ip = req.params.ip;
+    // Validate IP format (basic regex for IPv4/IPv6)
+    if (!/^[\d.:a-fA-F]+$/.test(ip)) {
+        return res.status(400).json({ error: 'Invalid IP address' });
+    }
+    // Use -c 4 for 4 pings, timeout 5 seconds
+    exec(`ping -c 4 -W 5 ${ip}`, { timeout: 30000 }, (error, stdout, stderr) => {
+        if (error) {
+            return res.json({ ok: false, ip, reachable: false, output: stderr || error.message });
+        }
+        // Parse average latency from ping output
+        const avgMatch = stdout.match(/avg[^=]*=\s*[\d.]+\/([\d.]+)/);
+        const avgLatency = avgMatch ? parseFloat(avgMatch[1]) : null;
+        const packetLossMatch = stdout.match(/([\d.]+)% packet loss/);
+        const packetLoss = packetLossMatch ? parseFloat(packetLossMatch[1]) : null;
+        res.json({
+            ok: true,
+            ip,
+            reachable: true,
+            avgLatency: avgLatency ? `${avgLatency}ms` : 'unknown',
+            packetLoss: packetLoss !== null ? `${packetLoss}%` : 'unknown',
+            output: stdout,
+        });
+    });
 });
 
 // ----------------------------------------------------------------
