@@ -7,6 +7,9 @@
  *   GET  /api/stream           - Server-Sent Events for real-time updates
  *   POST /api/simulate-attack  - Trigger a demo attack simulation
  *   GET  /health               - Health check
+ *   GET  /api/devices          - List connected devices
+ *   POST /api/register-device  - Merge client-side device info
+ *   POST /api/ping/:ip         - Ping a device IP from the server
  *
  * Serves the static status-page dashboard from ../status-page/
  */
@@ -16,6 +19,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { execFile } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +70,34 @@ let masterControlState = {
 /** Registered SSE clients */
 const sseClients = new Set();
 
+/** Connected device info — keyed by a unique client ID */
+const connectedDevices = new Map();
+let nextClientId = 1;
+
+/** Simple in-memory rate limiter for ping requests (per IP, no external deps) */
+const pingRateLimit = new Map(); // callerIp → { count, resetAt }
+const PING_RATE_LIMIT_MAX = 10;  // max pings per window per caller
+const PING_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1-minute window
+
+/**
+ * Express middleware that enforces a per-IP rate limit for the ping endpoint.
+ * Keeps a simple in-memory token-bucket without requiring external packages.
+ */
+function pingRateLimiter(req, res, next) {
+    const callerIp = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+    const now = Date.now();
+    const bucket = pingRateLimit.get(callerIp);
+    if (bucket && bucket.resetAt > now) {
+        if (bucket.count >= PING_RATE_LIMIT_MAX) {
+            return res.status(429).json({ error: 'Too many ping requests — please wait before trying again.' });
+        }
+        bucket.count += 1;
+    } else {
+        pingRateLimit.set(callerIp, { count: 1, resetAt: now + PING_RATE_LIMIT_WINDOW_MS });
+    }
+    next();
+}
+
 // ----------------------------------------------------------------
 // SSE Helpers
 // ----------------------------------------------------------------
@@ -96,6 +128,14 @@ function broadcastStatus(eventOverride) {
     };
     if (eventOverride) payload.event = eventOverride;
     broadcast('status', payload);
+}
+
+/** Broadcast the current connected device list to all clients */
+function broadcastDevices() {
+    broadcast('devices-update', {
+        devices: Array.from(connectedDevices.values()),
+        count: connectedDevices.size,
+    });
 }
 
 // ----------------------------------------------------------------
@@ -160,6 +200,18 @@ app.get('/api/stream', (req, res) => {
     res.setHeader('X-Accel-Buffering', 'no'); // disable Nginx buffering if present
     res.flushHeaders();
 
+    // Assign a unique client ID and record device info
+    const clientId = nextClientId++;
+    res.clientId = clientId;
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'] || '';
+    connectedDevices.set(clientId, {
+        id: clientId,
+        ip,
+        userAgent,
+        connectedAt: new Date().toISOString(),
+    });
+
     // Send current state immediately on connect
     const initial = JSON.stringify({
         systems: systemStatus,
@@ -170,8 +222,12 @@ app.get('/api/stream', (req, res) => {
     });
     res.write(`event: status\ndata: ${initial}\n\n`);
 
+    // Send the assigned client ID so the browser can register device info
+    res.write(`event: client-id\ndata: ${JSON.stringify({ clientId })}\n\n`);
+
     sseClients.add(res);
     broadcast('viewer-count', { count: sseClients.size });
+    broadcastDevices();
 
     // Keep-alive ping every 25 seconds
     const keepAlive = setInterval(() => {
@@ -186,7 +242,9 @@ app.get('/api/stream', (req, res) => {
     req.on('close', () => {
         clearInterval(keepAlive);
         sseClients.delete(res);
+        connectedDevices.delete(clientId);
         broadcast('viewer-count', { count: sseClients.size });
+        broadcastDevices();
     });
 });
 
@@ -377,6 +435,68 @@ app.post('/api/master-control/reset', (req, res) => {
     masterControlState.pauseTime = null;
     broadcast('master-reset', { timestamp: new Date().toISOString() });
     res.json({ ok: true, action: 'reset' });
+});
+
+// ----------------------------------------------------------------
+// Connected Devices Routes
+// ----------------------------------------------------------------
+
+/**
+ * GET /api/devices
+ * Returns the current list of connected devices.
+ */
+app.get('/api/devices', (_req, res) => {
+    res.json({ devices: Array.from(connectedDevices.values()), count: connectedDevices.size });
+});
+
+/**
+ * POST /api/register-device
+ * Accepts client-side device info and merges it with server-side data.
+ *
+ * Body: { clientId, os, browser, deviceType, screenResolution, language, timezone, connectionType }
+ */
+app.post('/api/register-device', (req, res) => {
+    const { clientId, ...info } = req.body || {};
+    if (!clientId || !connectedDevices.has(clientId)) {
+        return res.status(404).json({ error: 'Device not found' });
+    }
+    const existing = connectedDevices.get(clientId);
+    connectedDevices.set(clientId, { ...existing, ...info });
+    broadcastDevices();
+    res.json({ ok: true });
+});
+
+/**
+ * POST /api/ping/:ip
+ * Pings a device IP from the server using child_process.execFile.
+ */
+app.post('/api/ping/:ip', pingRateLimiter, (req, res) => {
+    const ip = req.params.ip;
+    // Validate: strict IPv4 or IPv6 — no shell metacharacters allowed
+    const isIPv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+    const isIPv6 = /^[\da-fA-F:]+$/.test(ip) && ip.includes(':');
+    if (!isIPv4 && !isIPv6) {
+        return res.status(400).json({ error: 'Invalid IP address' });
+    }
+    // Use execFile (not exec) so the IP is passed as an argument — no shell injection possible
+    execFile('ping', ['-c', '4', '-W', '5', ip], { timeout: 30000 }, (error, stdout, stderr) => {
+        if (error) {
+            return res.json({ ok: false, ip, reachable: false, output: stderr || error.message });
+        }
+        // Parse average latency from ping output
+        const avgMatch = stdout.match(/avg[^=]*=\s*[\d.]+\/([\d.]+)/);
+        const avgLatency = avgMatch ? parseFloat(avgMatch[1]) : null;
+        const packetLossMatch = stdout.match(/([\d.]+)% packet loss/);
+        const packetLoss = packetLossMatch ? parseFloat(packetLossMatch[1]) : null;
+        res.json({
+            ok: true,
+            ip,
+            reachable: true,
+            avgLatency: avgLatency ? `${avgLatency}ms` : 'unknown',
+            packetLoss: packetLoss !== null ? `${packetLoss}%` : 'unknown',
+            output: stdout,
+        });
+    });
 });
 
 // ----------------------------------------------------------------

@@ -9,8 +9,8 @@ WORKDIR /app
 #   docker build -f railway/api/Dockerfile railway/
 COPY api/package.json ./
 
-# Install production dependencies only
-RUN npm install --omit=dev
+# Install production dependencies only (iputils provides ping in Alpine)
+RUN apk add --no-cache iputils && npm install --omit=dev
 
 # Copy application source
 COPY api/server.js ./

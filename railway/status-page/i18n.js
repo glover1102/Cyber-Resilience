@@ -101,6 +101,17 @@ const UI_TRANSLATIONS = {
 
         // Timeline
         'dashboard-initialised': 'Dashboard initialised — awaiting metrics',
+
+        // Connected Devices Panel
+        'kpi-devices':       'Connected Users',
+        'section-devices':   '👥 Connected Devices',
+        'devices-connected': 'devices connected',
+        'th-device':         'Device',
+        'th-ip':             'IP Address',
+        'th-browser':        'Browser',
+        'th-type':           'Type',
+        'th-status-col':     'Status',
+        'th-actions':        'Actions',
     },
 
     es: {
@@ -198,6 +209,17 @@ const UI_TRANSLATIONS = {
 
         // Timeline
         'dashboard-initialised': 'Panel inicializado — esperando métricas',
+
+        // Connected Devices Panel
+        'kpi-devices':       'Usuarios Conectados',
+        'section-devices':   '👥 Dispositivos Conectados',
+        'devices-connected': 'dispositivos conectados',
+        'th-device':         'Dispositivo',
+        'th-ip':             'Dirección IP',
+        'th-browser':        'Navegador',
+        'th-type':           'Tipo',
+        'th-status-col':     'Estado',
+        'th-actions':        'Acciones',
     },
 };
 
