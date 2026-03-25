@@ -1153,7 +1153,20 @@ function toggleDeviceDetails(row, device) {
 }
 
 /**
+ * Measure the round-trip time from the browser to the server.
+ * Calls GET /api/ping and uses the elapsed wall-clock time as RTT.
+ * @returns {Promise<number>} RTT in milliseconds
+ */
+function measureRTT() {
+    const start = Date.now();
+    return fetch(`${API_BASE}/api/ping`)
+        .then(() => Date.now() - start);
+}
+
+/**
  * Ping a device IP from the server and show the result.
+ * Attempts ICMP first; if the platform returns demo mode, also shows
+ * the browser-to-server RTT as a reliable alternative measurement.
  * @param {string}          ip  - IP address to ping.
  * @param {HTMLButtonElement} btn - The ping button element.
  */
@@ -1170,8 +1183,19 @@ function pingDevice(ip, btn) {
         .then(res => res.json())
         .then(data => {
             if (data.reachable) {
-                btn.textContent = `✅ ${data.avgLatency}`;
-                showToast(`Ping ${ip}: ${data.avgLatency} (${data.packetLoss} loss)`, 'success');
+                if (data.mode === 'demo') {
+                    // ICMP was blocked — also show server RTT for a real measurement
+                    measureRTT().then(rtt => {
+                        btn.textContent = `🔵 ~${rtt}ms`;
+                        showToast(`Ping ${ip}: ~${rtt}ms RTT (ICMP blocked by platform, showing server RTT)`, 'info');
+                    }).catch(() => {
+                        btn.textContent = `🔵 ${data.avgLatency} (demo)`;
+                        showToast(`Ping ${ip}: ${data.avgLatency} — demo mode (ICMP blocked by platform)`, 'info');
+                    });
+                } else {
+                    btn.textContent = `✅ ${data.avgLatency}`;
+                    showToast(`Ping ${ip}: ${data.avgLatency} (${data.packetLoss} loss)`, 'success');
+                }
             } else {
                 btn.textContent = '❌ Unreachable';
                 showToast(`Ping ${ip}: Unreachable`, 'danger');
